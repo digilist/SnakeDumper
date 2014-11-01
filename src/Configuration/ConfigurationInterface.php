@@ -19,9 +19,4 @@ interface ConfigurationInterface
      * @return array
      */
     public function toArray();
-
-    /**
-     * @return string
-     */
-    public function getNodeName();
 }

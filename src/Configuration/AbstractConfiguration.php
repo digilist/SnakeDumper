@@ -12,7 +12,6 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
 {
 
     private $config;
-    private $nodeName;
 
     /**
      * @param array $config
@@ -21,6 +20,8 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
     {
         if (!empty($config)) {
             $this->fromArray($config);
+        } else {
+            $this->config = $config;
         }
     }
 
@@ -41,14 +42,6 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
     public function toArray()
     {
         return $this->config;
-    }
-
-    /**
-     * @return string
-     */
-    public function getNodeName()
-    {
-        return $this->nodeName;
     }
 
     /**
