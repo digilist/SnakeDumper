@@ -11,6 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Yaml\Yaml;
 
 class DumpCommand extends Command
@@ -26,13 +27,14 @@ class DumpCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $config = $this->parseConfig($input);
+        $dumpOutput = new StreamOutput(fopen($config->getOutput()->getFile(), 'w'));
 
         /** @var DumperInterface $dumper */
         $class = $config->getFullQualifiedDumper();
         $dumper = new $class();
 
         $dumper->setConverter(SqlConverterService::createFromConfig($config));
-        $dumper->dump($config, $output);
+        $dumper->dump($config, $dumpOutput);
     }
 
     private function parseConfig(InputInterface $input)

@@ -5,15 +5,12 @@ namespace Digilist\SnakeDumper\Configuration;
 class OutputConfiguration extends AbstractConfiguration
 {
 
-    private $file;
-    private $gzip;
-
     /**
      * @return string
      */
     public function getFile()
     {
-        return $this->file;
+        return $this->get('file');
     }
 
     /**
@@ -22,8 +19,7 @@ class OutputConfiguration extends AbstractConfiguration
      */
     public function setFile($file)
     {
-        $this->file = $file;
-        return $this;
+        return $this->set('file', $file);
     }
 
     /**
@@ -31,7 +27,7 @@ class OutputConfiguration extends AbstractConfiguration
      */
     public function getGzip()
     {
-        return $this->gzip;
+        return $this->get('gzip');
     }
 
     /**
@@ -40,8 +36,7 @@ class OutputConfiguration extends AbstractConfiguration
      */
     public function setGzip($gzip)
     {
-        $this->gzip = $gzip;
-        return $this;
+        $this->set('gzip', $gzip);
     }
 
     protected function parseConfig(array $config)

@@ -52,7 +52,7 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
             return $this->config[$key];
         }
 
-        return$default;
+        return $default;
     }
 
     /**
