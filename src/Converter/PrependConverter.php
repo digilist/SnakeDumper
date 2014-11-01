@@ -2,6 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
+use Digilist\SnakeDumper\Converter\Helper\VariableParserHelper;
 use Digilist\SnakeDumper\Exception\InvalidArgumentException;
 
 class PrependConverter implements ConverterInterface
@@ -34,6 +35,6 @@ class PrependConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        return $this->prepend . $value;
+        return VariableParserHelper::parse($this->prepend, $context) . $value;
     }
 }

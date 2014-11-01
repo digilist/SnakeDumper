@@ -2,6 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
+use Digilist\SnakeDumper\Converter\Helper\VariableParserHelper;
 use Digilist\SnakeDumper\Exception\InvalidArgumentException;
 
 class ReplaceConverter implements ConverterInterface
@@ -43,6 +44,6 @@ class ReplaceConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        return str_replace($this->search, $this->replace, $value);
+        return str_replace($this->search, VariableParserHelper::parse($this->replace, $context), $value);
     }
 }

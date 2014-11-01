@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
+use Digilist\SnakeDumper\Converter\Helper\VariableParserHelper;
+
 class StringConverter implements ConverterInterface
 {
 
@@ -29,6 +31,6 @@ class StringConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        return $this->string;
+        return VariableParserHelper::parse($this->string, $context);
     }
 }
