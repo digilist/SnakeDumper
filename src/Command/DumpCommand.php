@@ -4,11 +4,8 @@ namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
-use Digilist\SnakeDumper\Converter\Helper\HumanNameHelper;
 use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
-use Digilist\SnakeDumper\Converter\ChainConverter;
-use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
