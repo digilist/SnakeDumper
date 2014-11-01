@@ -10,14 +10,10 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
 {
 
     private $database;
-
-    protected function parseConfig(array $config)
-    {
-        $this->database = new DatabaseConfiguration($this->get('database'));
-    }
+    private $output;
 
     /**
-     * @return DatabaseConfigurationInterface
+     * @return DatabaseConfiguration
      */
     public function getDatabase()
     {
@@ -27,16 +23,38 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     /**
      * @return ConfigurationInterface
      */
-    public function getSettings()
+    public function getTables()
     {
-        // TODO: Implement getSettings() method.
+        // TODO: Implement getAnonymize() method.
     }
 
     /**
-     * @return ConfigurationInterface
+     * @return string
      */
-    public function getAnonymize()
+    public function getDumper()
     {
-        // TODO: Implement getAnonymize() method.
+        return $this->get('dumper', null);
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullQualifiedDumper()
+    {
+        return 'Digilist\\SnakeDumper\\Dumper\\' . $this->getDumper() . 'Dumper';
+    }
+
+    /**
+     * @return OutputConfiguration
+     */
+    public function getOutput()
+    {
+        return $this->output;
+    }
+
+    protected function parseConfig(array $config)
+    {
+        $this->database = new DatabaseConfiguration($this->get('database', null));
+        $this->output = new OutputConfiguration($this->get('output', null));
     }
 }

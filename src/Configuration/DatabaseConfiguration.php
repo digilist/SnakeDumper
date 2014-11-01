@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-class DatabaseConfiguration extends AbstractConfiguration implements DatabaseConfigurationInterface
+class DatabaseConfiguration extends AbstractConfiguration
 {
 
     /**
@@ -10,7 +10,16 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
      */
     public function getDatabaseName()
     {
-        return $this->get('dbname');
+        return $this->get('dbname', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setDatabaseName($value)
+    {
+        return $this->set('dbname', $value);
     }
 
     /**
@@ -18,7 +27,16 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
      */
     public function getDriver()
     {
-        return $this->get('driver');
+        return $this->get('driver', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setDriver($value)
+    {
+        return $this->set('driver', $value);
     }
 
     /**
@@ -26,7 +44,16 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
      */
     public function getHost()
     {
-        return $this->get('host');
+        return $this->get('host', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setHost($value)
+    {
+        return $this->set('host', $value);
     }
 
     /**
@@ -34,7 +61,16 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
      */
     public function getPassword()
     {
-        return $this->get('password');
+        return $this->get('password', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setPassword($value)
+    {
+        return $this->set('password', $value);
     }
 
     /**
@@ -42,7 +78,16 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
      */
     public function getUser()
     {
-        return $this->get('user');
+        return $this->get('user', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setUser($value)
+    {
+        return $this->set('user', $value);
     }
 
     protected function parseConfig(array $config)

@@ -10,7 +10,7 @@ class AnonymizeConfiguration extends AbstractConfiguration implements AnonymizeC
      */
     public function getFormat()
     {
-        return $this->get('format');
+        return $this->get('format', null);
     }
 
     protected function parseConfig(array $config)

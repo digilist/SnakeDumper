@@ -5,6 +5,7 @@ namespace Digilist\SnakeDumper\Command;
 use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
 use Digilist\SnakeDumper\Converter\Converter;
+use Digilist\SnakeDumper\Dumper\DumperInterface;
 use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
@@ -28,7 +29,10 @@ class DumpCommand extends Command
     {
         $config = $this->parseConfig($input);
 
-        $dumper = new SqlDumper();
+        /** @var DumperInterface $dumper */
+        $class = $config->getFullQualifiedDumper();
+        $dumper = new $class();
+
         $dumper->setConverter(new Converter());
         $dumper->dump($config, $output);
     }

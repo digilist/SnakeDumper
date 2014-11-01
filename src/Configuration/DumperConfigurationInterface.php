@@ -1,4 +1,4 @@
-<?php /** File containing interface DumperConfigurationInterface */
+<?php
 
 namespace Digilist\SnakeDumper\Configuration;
 
@@ -10,17 +10,22 @@ interface DumperConfigurationInterface
 {
 
     /**
-     * @return DatabaseConfigurationInterface
+     * @return string
+     */
+    public function getDumper();
+
+    /**
+     * @return DatabaseConfiguration
      */
     public function getDatabase();
 
     /**
-     * @return CommonConfigurationInterface
+     * @return OutputConfiguration
      */
-    public function getSettings();
+    public function getOutput();
 
     /**
-     * @return AnonymizeConfigurationInterface
+     * @return array
      */
-    public function getAnonymize();
+    public function getTables();
 }

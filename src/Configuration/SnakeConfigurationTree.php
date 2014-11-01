@@ -18,27 +18,37 @@ class SnakeConfigurationTree implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         $rootNode = $treeBuilder->root('anonymizer');
 
-        $rootNode
-            ->children()
-                ->arrayNode('database')
-                    ->children()
-                        ->scalarNode('driver')->end()
-                        ->scalarNode('host')->end()
-                        ->scalarNode('user')->end()
-                        ->scalarNode('password')->end()
-                        ->scalarNode('dbname')->end()
-                    ->end()
+        $rootChildrenNode = $rootNode->children();
+
+        // Property for dumper to use
+        $rootChildrenNode->scalarNode('dumper')->cannotBeEmpty()->isRequired()->end();
+
+        $rootChildrenNode
+            ->arrayNode('output')
+                ->children()
+                    ->scalarNode('file')->defaultValue('php://stdout')->end()
+                    ->booleanNode('gzip')->defaultFalse()->end()
                 ->end()
-                ->arrayNode('settings')
-                    ->children()
-                        ->scalarNode('output')->end()
-                        ->scalarNode('file')->end()
-                    ->end()
+            ->end()
+        ;
+
+        $rootChildrenNode
+            ->arrayNode('database')
+                ->children()
+                    ->scalarNode('driver')->end()
+                    ->scalarNode('host')->end()
+                    ->scalarNode('user')->end()
+                    ->scalarNode('password')->end()
+                    ->scalarNode('dbname')->end()
                 ->end()
-                ->arrayNode('anonymize')
+            ->end()
+        ;
+
+        $rootChildrenNode
+            ->arrayNode('tables')
                     ->children()
-                        ->scalarNode('format')->end()
-//                        ->arrayNode()
+                    ->end()
+            ->end()
         ;
 
         return $treeBuilder;

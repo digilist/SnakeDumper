@@ -1,20 +1,17 @@
+dumper: Sql
+output:
+    file: php://stdout
+    gzip: false
 database:
     driver: pdo_mysql
     host: localhost
     user: root
     password: ''
     dbname: demo
-
-settings:
-    output: stream
-    file: dump.sql
-
-anonymize:
-    format: Sql
-
-#    tables:
-#        foo:
-#            columns:
-#                bar: Null
-#        bar:
-#            truncate: true
+tables:
+#    foo:
+#        ignore_content: false
+#        columns:
+#            name:
+#                - JohnDoe: ~
+#    properties:

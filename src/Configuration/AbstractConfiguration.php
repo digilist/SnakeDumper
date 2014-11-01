@@ -20,9 +20,10 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
     {
         if (!empty($config)) {
             $this->fromArray($config);
-        } else {
-            $this->config = $config;
+            return;
         }
+
+        $this->config = $config;
     }
 
     /**
@@ -46,11 +47,27 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
 
     /**
      * @param string $key
+     * @param $default
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
-        return $this->config[$key];
+        if ($this->has($key)) {
+            return $this->config[$key];
+        }
+
+        return$default;
+    }
+
+    /**
+     * @param string $key
+     * @param mixed $value
+     * @return static
+     */
+    public function set($key, $value)
+    {
+        $this->config[$key];
+        return $this;
     }
 
     /**
