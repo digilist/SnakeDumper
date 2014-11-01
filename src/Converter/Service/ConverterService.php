@@ -2,6 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter\Service;
 
+use Digilist\SnakeDumper\Configuration\ConverterConfiguration;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Converter\ConverterInterface;
@@ -12,7 +13,7 @@ abstract class ConverterService implements ConverterServiceInterface
     /**
      * @var ConverterInterface[]
      */
-    private $converter = array();
+    private $converters = array();
 
     /**
      * @var DumperConfigurationInterface
@@ -38,12 +39,18 @@ abstract class ConverterService implements ConverterServiceInterface
      */
     public function convert($key, $value, array $context = array())
     {
-        if (!array_key_exists($key, $this->converter)) {
+        if (!array_key_exists($key, $this->converters)) {
             return $value;
         }
 
-        return $this->converter[$key]->convert($value, $context);
+        return $this->converters[$key]->convert($value, $context);
     }
+
+    /**
+     * Read the configuration and create all necessary converter
+     *
+     */
+    protected abstract function initConverters();
 
     /**
      * Adds a new converter for the specified key. If there is already a converter for this key,
@@ -54,20 +61,43 @@ abstract class ConverterService implements ConverterServiceInterface
      */
     protected function addConverter($key, ConverterInterface $converter)
     {
-        if (array_key_exists($key, $this->converter)) {
+        if (array_key_exists($key, $this->converters)) {
             $message = sprintf(
-                'There is already a converter with key %s. Please provide a chain if there are multiple converter.',
+                'There is already a converter with key %s. Please provide a chain if there are multiple converters.',
                 $key
             );
             throw new \InvalidArgumentException($message);
         }
 
-        $this->converter[$key] = $converter;
+        $this->converters[$key] = $converter;
     }
 
     /**
-     * Read the configuration and create all necessary converter
+     * This method helps to add the different converters.
+     * If there is only one converter, it will be added directly. If there are multiple converters
+     * they will be combined into a chain.
      *
+     * @param string                   $key
+     * @param ConverterConfiguration[] $converterConfigurations
      */
-    protected abstract function initConverters();
+    protected function addConvertersFromConfig($key, array $converterConfigurations)
+    {
+        $chainConverter = null;
+        if (count($converterConfigurations) > 0) {
+            $chainConverter = new ChainConverter();
+            $this->addConverter($key, $chainConverter);
+        }
+
+        foreach ($converterConfigurations as $converterConf) {
+            $class = $converterConf->getFullQualifiedClassName();
+
+            $converter = new $class();
+
+            if ($chainConverter != null) {
+                $chainConverter->addConverter($converter);
+            } else {
+                $this->addConverter($key, $converter);
+            }
+        }
+    }
 }

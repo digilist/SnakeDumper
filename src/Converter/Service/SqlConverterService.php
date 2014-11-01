@@ -2,8 +2,6 @@
 
 namespace Digilist\SnakeDumper\Converter\Service;
 
-use Digilist\SnakeDumper\Converter\NullConverter;
-
 class SqlConverterService extends ConverterService
 {
 
@@ -13,8 +11,11 @@ class SqlConverterService extends ConverterService
      */
     protected function initConverters()
     {
-//        foreach ($this->config->getTables() as $table) {
-//
-//        }
+        foreach ($this->config->getTables() as $tableName => $table) {
+            foreach ($table->getColumns() as $columnName => $column) {
+                $key = sprintf('%s.%s', $tableName, $columnName);
+                $this->addConvertersFromConfig($key, $column->getConverters());
+            }
+        }
     }
 }

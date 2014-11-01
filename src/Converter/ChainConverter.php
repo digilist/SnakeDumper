@@ -8,14 +8,14 @@ class ChainConverter implements ConverterInterface
     /**
      * @var ConverterInterface[]
      */
-    private $converter;
+    private $converters;
 
     /**
-     * @param ConverterInterface[] $converter
+     * @param ConverterInterface[] $converters
      */
-    public function __construct(array $converter = array())
+    public function __construct(array $converters = array())
     {
-        $this->converter = $converter;
+        $this->converters = $converters;
     }
 
     /**
@@ -27,7 +27,7 @@ class ChainConverter implements ConverterInterface
      */
     public function addConverter(ConverterInterface $converter)
     {
-        $this->converter[] = $converter;
+        $this->converters[] = $converter;
     }
 
     /**
@@ -38,7 +38,7 @@ class ChainConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        foreach ($this->converter as $converter) {
+        foreach ($this->converters as $converter) {
             $value = $converter->convert($value, $context);
         }
 
