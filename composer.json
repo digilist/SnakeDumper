@@ -1,0 +1,24 @@
+{
+    "name": "digilist/snakedumper",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Markus Fasselt",
+            "email": "markus.fasselt@gmail.com"
+        }
+    ],
+    "bin": ["bin/snakedumper"],
+    "require": {
+        "php": ">=5.5",
+        "psr/log": "~1.0.0",
+        "symfony/config": "~2.5",
+        "symfony/yaml": "~2.5",
+        "symfony/console": "~2.5",
+        "doctrine/dbal": "2.5.0-RC2"
+    },
+    "autoload": {
+        "psr-4": {
+            "Digilist\\SnakeDumper\\": "src/"
+        }
+    }
+}
