@@ -54,22 +54,15 @@ abstract class ConverterService implements ConverterServiceInterface
      */
     protected function addConverter($key, ConverterInterface $converter)
     {
-        if (!array_key_exists($key, $this->converter)) {
-            $this->converter[$key] = $converter;
-
-            return;
+        if (array_key_exists($key, $this->converter)) {
+            $message = sprintf(
+                'There is already a converter with key %s. Please provide a chain if there are multiple converter.',
+                $key
+            );
+            throw new \InvalidArgumentException($message);
         }
 
-        $existingConverter = $this->converter[$key];
-        if ($existingConverter instanceof ChainConverter) {
-            $existingConverter->addConverter($converter);
-
-            return;
-        }
-
-        $chain = new ChainConverter();
-        $chain->addConverter($existingConverter);
-        $chain->addConverter($converter);
+        $this->converter[$key] = $converter;
     }
 
     /**
