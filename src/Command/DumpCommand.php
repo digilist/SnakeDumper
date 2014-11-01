@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
+use Digilist\SnakeDumper\Converter\Helper\HumanNameHelper;
 use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
