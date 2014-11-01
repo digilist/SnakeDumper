@@ -2,6 +2,7 @@
 
 namespace Digilist\SnakeDumper\Exporter;
 
+use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Logger\PsrSQLLogger;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
@@ -16,7 +17,7 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 class SqlDumper implements DumperInterface
 {
 
-    public function dump(array $config)
+    public function dump(DumperConfigurationInterface $config)
     {
 //        $logger = new ConsoleLogger($output);
 
@@ -24,11 +25,11 @@ class SqlDumper implements DumperInterface
 //        $dbalConfig->setSQLLogger(new PsrSQLLogger($logger));
 
         $connectionParams = array(
-            'driver' => $config['database']['driver'],
-            'host' => $config['database']['host'],
-            'user' => $config['database']['user'],
-            'password' => $config['database']['password'],
-            'dbname' => $config['database']['dbname'],
+            'driver' => $config->getDatabase()->getDriver(),
+            'host' => $config->getDatabase()->getHost(),
+            'user' => $config->getDatabase()->getUser(),
+            'password' => $config->getDatabase()->getPassword(),
+            'dbname' => $config->getDatabase()->getDatabaseName(),
         );
         $conn = DriverManager::getConnection($connectionParams, $dbalConfig);
         $conn->connect();

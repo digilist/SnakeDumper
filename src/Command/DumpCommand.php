@@ -2,27 +2,13 @@
 
 namespace Digilist\SnakeDumper\Command;
 
+use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
 use Digilist\SnakeDumper\Exporter\SqlDumper;
-use Digilist\SnakeDumper\Logger\PsrSQLLogger;
-use Doctrine\DBAL\Configuration;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Driver\Statement;
-use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Platforms\AbstractPlatform;
-use Doctrine\DBAL\Platforms\MySqlPlatform;
-use Doctrine\DBAL\Query\QueryBuilder;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\Visitor\CreateSchemaSqlCollector;
-use Doctrine\DBAL\Types\Type;
-use PDO;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Yaml\Yaml;
 
@@ -50,6 +36,8 @@ class DumpCommand extends Command
 
         $processor = new Processor();
         $configuration = new SnakeConfigurationTree();
-        return $processor->processConfiguration($configuration, [$config]);
+        $processed = $processor->processConfiguration($configuration, [$config]);
+
+        return new SnakeConfiguration($processed);
     }
 }
