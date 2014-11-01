@@ -2,10 +2,6 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-/**
- * @package Digilist\SnakeDumper\Configuration
- * @author moellers
- */
 class TableConfiguration extends AbstractConfiguration
 {
 
@@ -54,6 +50,19 @@ class TableConfiguration extends AbstractConfiguration
     public function setIgnoreContent($value)
     {
         return $this->get('ignore_content', boolval($value));
+    }
+
+    /**
+     * @return ColumnConfiguration[]
+     */
+    public function getColumns()
+    {
+        $columns = array();
+        foreach ($this->get('columns', array()) as $name => $column) {
+            $columns[$name] = new ColumnConfiguration($name, $column);
+        }
+
+        return $columns;
     }
 
     protected function parseConfig(array $config)

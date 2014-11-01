@@ -1,11 +1,7 @@
-<?php /** File containing interface ConfigurationInterface */
+<?php
 
 namespace Digilist\SnakeDumper\Configuration;
 
-/**
- * @package Configuration
- * @author moellers
- */
 interface ConfigurationInterface
 {
 

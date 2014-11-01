@@ -1,11 +1,7 @@
-<?php /** File containing class ConfigurationException */
+<?php
 
 namespace Digilist\SnakeDumper\Exception;
 
-/**
- * @package Exception
- * @author moellers
- */
 class ConfigurationException extends \Exception
 {
 

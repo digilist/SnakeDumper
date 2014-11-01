@@ -49,6 +49,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                 ->prototype('array')
                     ->children()
                         ->booleanNode('ignore_content')->defaultFalse()->end()
+                        ->variableNode('columns')->end()
                     ->end()
                 ->end()
             ->end()

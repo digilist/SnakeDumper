@@ -1,11 +1,7 @@
-<?php /** File containing class SnakeConfiguration */
+<?php
 
 namespace Digilist\SnakeDumper\Configuration;
 
-/**
- * @package Configuration
- * @author moellers
- */
 class SnakeConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
 {
 
@@ -27,7 +23,7 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     {
         $tables = array();
         foreach ($this->get('tables', array()) as $name => $table) {
-            $tables[] = new TableConfiguration($name, $table);
+            $tables[$name] = new TableConfiguration($name, $table);
         }
 
         return $tables;

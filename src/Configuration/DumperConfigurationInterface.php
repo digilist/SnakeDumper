@@ -2,10 +2,6 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-/**
- * @package Configuration
- * @author moellers
- */
 interface DumperConfigurationInterface
 {
 

@@ -1,13 +1,9 @@
-<?php /** File containing class AbstractConfiguration */
+<?php
 
 namespace Digilist\SnakeDumper\Configuration;
 
 use Digilist\SnakeDumper\Exception\ConfigurationException;
 
-/**
- * @package Configuration
- * @author moellers
- */
 abstract class AbstractConfiguration implements ConfigurationInterface, CommonConfigurationInterface
 {
 

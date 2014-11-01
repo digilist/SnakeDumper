@@ -7,10 +7,13 @@ database:
     host: localhost
     user: root
     password: ''
-    dbname: frisuda_app
+    dbname: demo
 tables:
     foo:
         ignore_content: false
-#        columns:
-#            name:
-#                - JohnDoe: ~
+        columns:
+            name:
+                - JohnDoe: ~
+                - JohnDoe:
+                    bla: foo
+                    baz: bar
