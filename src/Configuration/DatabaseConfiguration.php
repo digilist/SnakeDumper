@@ -90,6 +90,23 @@ class DatabaseConfiguration extends AbstractConfiguration
         return $this->set('user', $value);
     }
 
+    /**
+     * @return string
+     */
+    public function getCharset()
+    {
+        return $this->get('charset', null);
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setCharset($value)
+    {
+        return $this->set('charset', $value);
+    }
+
     protected function parseConfig(array $config)
     {
         $this->ensureHas('dbname');
@@ -97,5 +114,6 @@ class DatabaseConfiguration extends AbstractConfiguration
         $this->ensureHas('host');
         $this->ensureHas('password');
         $this->ensureHas('user');
+        $this->ensureHas('charset');
     }
 }

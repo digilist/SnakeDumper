@@ -29,6 +29,7 @@ class SqlDumper extends AbstractDumper
             'user' => $config->getDatabase()->getUser(),
             'password' => $config->getDatabase()->getPassword(),
             'dbname' => $config->getDatabase()->getDatabaseName(),
+            'charset' => $config->getDatabase()->getCharset(),
         );
         $conn = DriverManager::getConnection($connectionParams, $dbalConfig);
         $conn->connect();

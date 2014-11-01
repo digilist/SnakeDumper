@@ -40,6 +40,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                     ->scalarNode('user')->end()
                     ->scalarNode('password')->end()
                     ->scalarNode('dbname')->end()
+                    ->scalarNode('charset')->end()
                 ->end()
             ->end()
         ;
