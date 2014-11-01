@@ -4,12 +4,14 @@ namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
-use Digilist\SnakeDumper\Exporter\SqlDumper;
+use Digilist\SnakeDumper\Converter\Converter;
+use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Yaml\Yaml;
 
 class DumpCommand extends Command
@@ -27,7 +29,8 @@ class DumpCommand extends Command
         $config = $this->parseConfig($input);
 
         $dumper = new SqlDumper();
-        $dumper->dump($config);
+        $dumper->setConverter(new Converter());
+        $dumper->dump($config, $output);
     }
 
     private function parseConfig(InputInterface $input)

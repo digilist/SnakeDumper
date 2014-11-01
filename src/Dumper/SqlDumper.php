@@ -1,9 +1,8 @@
 <?php
 
-namespace Digilist\SnakeDumper\Exporter;
+namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Logger\PsrSQLLogger;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -12,16 +11,16 @@ use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Statement;
 use PDO;
-use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\OutputInterface;
 
-class SqlDumper implements DumperInterface
+class SqlDumper extends AbstractDumper
 {
 
-    public function dump(DumperConfigurationInterface $config)
+    public function dump(DumperConfigurationInterface $config, OutputInterface $output)
     {
-//        $logger = new ConsoleLogger($output);
-
         $dbalConfig = new Configuration();
+
+//        $logger = new ConsoleLogger($output);
 //        $dbalConfig->setSQLLogger(new PsrSQLLogger($logger));
 
         $connectionParams = array(
@@ -40,17 +39,18 @@ class SqlDumper implements DumperInterface
         $sm = $conn->getSchemaManager();
         $tables = $sm->listTables();
 
-        $this->getTableSchemaSql($tables, $conn->getDatabasePlatform());
-        $this->dumpTables($tables, $conn);
+        $this->dumpTableSchema($tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpTables($tables, $conn, $output);
     }
 
     /**
      * @param Table[]          $tables
      * @param AbstractPlatform $platform
+     * @param OutputInterface  $output
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function getTableSchemaSql(array $tables, AbstractPlatform $platform)
+    private function dumpTableSchema(array $tables, AbstractPlatform $platform, OutputInterface $output)
     {
         $schema = [
             'tables' => [],
@@ -70,19 +70,15 @@ class SqlDumper implements DumperInterface
 
         $schema = $this->implodeQueries($schema);
 
-        echo $schema . ';';
-    }
-
-    private function implodeQueries($queries)
-    {
-        return implode(";\n", $queries);
+        $output->writeln($schema . ';');
     }
 
     /**
-     * @param Table[]    $tables
-     * @param Connection $conn
+     * @param Table[]         $tables
+     * @param Connection      $conn
+     * @param OutputInterface $output
      */
-    private function dumpTables(array $tables, Connection $conn)
+    private function dumpTables(array $tables, Connection $conn, OutputInterface $output)
     {
         $conn->setFetchMode(PDO::FETCH_NUM);
 
@@ -102,25 +98,33 @@ class SqlDumper implements DumperInterface
             $columns = implode(', ', $columns);
 
             /** @var Statement $result */
-            $result = $qb->select('*')->from($table->getName(), 't')->execute();
+            $result = $qb->select('*')
+                ->from($table->getName(), 't')
+                ->execute();
 
             foreach ($result as $row) {
+                foreach ($row as $key => $value) {
+                    $value = $this->convert($table, $key, $value, $row);
 
-                foreach ($row as $key => $val) {
-                    if (is_null($val))
-                        $row[$key] = 'NULL';
-                    else if (ctype_digit($val))
-                        $row[$key] = $val;
-                    else {
-                        $row[$key] = $pdo->quote($val);
+                    if (is_null($value)) {
+                        $value = 'NULL';
+                    } elseif (!ctype_digit($value)) {
+                        $value = $pdo->quote($value);
                     }
+
+                    $row[$key] = $value;
                 }
 
                 $query = 'INSERT INTO ' . $tableName . ' (' . $columns . ')' .
-                    ' VALUES (' . implode(', ', $row) . ');' . PHP_EOL;
+                    ' VALUES (' . implode(', ', $row) . ');';
 
-                echo $query;
+                $output->writeln($query);
             }
         }
+    }
+
+    private function implodeQueries($queries)
+    {
+        return implode(";\n", $queries);
     }
 }

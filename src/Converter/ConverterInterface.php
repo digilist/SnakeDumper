@@ -8,10 +8,13 @@ interface ConverterInterface
     /**
      * Convert the passed value into another value which does not contain sensible data any longer.
      *
+     * @param string $table
+     * @param string $column
      * @param string $value
+     * @param array  $context
      *
-     * @return string
+     * @return mixed
      */
-    public function convert($value);
+    public function convert($table, $column, $value, array $context = array());
 
 } 
