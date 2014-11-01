@@ -45,7 +45,7 @@ class DatabaseConfiguration extends AbstractConfiguration implements DatabaseCon
         return $this->get('user');
     }
 
-    protected function parseConfig(array $oldConfig, array $newConfig)
+    protected function parseConfig(array $config)
     {
         $this->ensureHas('dbname');
         $this->ensureHas('driver');

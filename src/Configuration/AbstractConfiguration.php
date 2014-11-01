@@ -30,10 +30,9 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
      */
     public function fromArray(array $config)
     {
-        $oldConfig = $this->config;
         $this->config = $config;
 
-        $this->parseConfig($oldConfig, $config);
+        $this->parseConfig($config);
     }
 
     /**
@@ -81,5 +80,5 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
         }
     }
 
-    abstract protected function parseConfig(array $oldConfig, array $newConfig);
+    abstract protected function parseConfig(array $config);
 }

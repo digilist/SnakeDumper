@@ -11,7 +11,7 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
 
     private $database;
 
-    protected function parseConfig(array $oldConfig, array $newConfig)
+    protected function parseConfig(array $config)
     {
         $this->database = new DatabaseConfiguration($this->get('database'));
     }

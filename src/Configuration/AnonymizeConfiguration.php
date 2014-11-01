@@ -13,7 +13,7 @@ class AnonymizeConfiguration extends AbstractConfiguration implements AnonymizeC
         return $this->get('format');
     }
 
-    protected function parseConfig(array $oldConfig, array $newConfig)
+    protected function parseConfig(array $config)
     {
         $this->ensureHas('format');
     }
