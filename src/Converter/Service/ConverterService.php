@@ -17,18 +17,9 @@ abstract class ConverterService implements ConverterServiceInterface
     private $converters = array();
 
     /**
-     * @var DumperConfigurationInterface
      */
-    protected $config;
-
-    /**
-     * @param DumperConfigurationInterface $config
-     */
-    public function __construct(DumperConfigurationInterface $config)
+    public function __construct()
     {
-        $this->config = $config;
-
-        $this->initConverters();
     }
 
     /**
@@ -46,12 +37,6 @@ abstract class ConverterService implements ConverterServiceInterface
 
         return $this->converters[$key]->convert($value, $context);
     }
-
-    /**
-     * Read the configuration and create all necessary converter
-     *
-     */
-    protected abstract function initConverters();
 
     /**
      * Adds a new converter for the specified key. If there is already a converter for this key,

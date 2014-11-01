@@ -14,22 +14,22 @@ abstract class AbstractDumper implements DumperInterface
     private $converter;
 
     /**
+     * @param ConverterServiceInterface $converter
+     */
+    public function setConverter(ConverterServiceInterface $converter)
+    {
+        $this->converter = $converter;
+    }
+
+    /**
      * @param string  $key
      * @param string  $value
      * @param array   $context
      *
      * @return mixed
      */
-    protected  function convert($key, $value, array $context = [])
+    protected function convert($key, $value, array $context = [])
     {
         return $this->converter->convert($key, $value, $context);
     }
-
-    /**
-     * @param ConverterServiceInterface $converter
-     */
-     public function setConverter(ConverterServiceInterface $converter)
-     {
-         $this->converter = $converter;
-     }
- }
+}

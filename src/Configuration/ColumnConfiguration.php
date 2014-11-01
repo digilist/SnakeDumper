@@ -41,7 +41,6 @@ class ColumnConfiguration extends AbstractConfiguration
     public function getConverters()
     {
         $converters = array();
-        var_dump($this->toArray());
         foreach ($this->toArray() as $converterDef) {
 
             $parameter = null;
