@@ -41,10 +41,20 @@ class ColumnConfiguration extends AbstractConfiguration
     public function getConverters()
     {
         $converters = array();
+        var_dump($this->toArray());
         foreach ($this->toArray() as $converterDef) {
-            foreach ($converterDef as $className => $parameters) {
-                $converters[] = new ConverterConfiguration($className, $parameters);
+
+            $parameter = null;
+            if ($converterDef === null) {
+                $className = 'Null';
+            } elseif (is_array($converterDef)) {
+                list($className) = array_keys($converterDef);
+                $parameter = $converterDef[$className];
+            } else {
+                $className = $converterDef;
             }
+
+            $converters[] = new ConverterConfiguration($className, $parameter);
         }
 
         return $converters;

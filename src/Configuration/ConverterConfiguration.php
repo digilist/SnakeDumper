@@ -2,19 +2,27 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-class ConverterConfiguration extends AbstractConfiguration
+class ConverterConfiguration
 {
 
+    /**
+     * @var string
+     */
     private $className;
 
     /**
-     * @param string $className
-     * @param array $parameters
+     * @var array
      */
-    public function __construct($className, array $parameters = null)
+    private $parameters;
+
+    /**
+     * @param string $className
+     * @param mixed $parameters
+     */
+    public function __construct($className, $parameters = null)
     {
         $this->className = $className;
-        parent::__construct((array) $parameters);
+        $this->parameters = $parameters;
     }
 
     /**
@@ -52,11 +60,6 @@ class ConverterConfiguration extends AbstractConfiguration
      */
     public function getParameters()
     {
-        return $this->toArray();
-    }
-
-    protected function parseConfig(array $config)
-    {
-        // TODO: Implement parseConfig() method.
+        return $this->parameters;
     }
 }

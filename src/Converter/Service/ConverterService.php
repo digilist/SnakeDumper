@@ -6,6 +6,7 @@ use Digilist\SnakeDumper\Configuration\ConverterConfiguration;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Converter\ConverterInterface;
+use ReflectionClass;
 
 abstract class ConverterService implements ConverterServiceInterface
 {
@@ -89,15 +90,26 @@ abstract class ConverterService implements ConverterServiceInterface
         }
 
         foreach ($converterConfigurations as $converterConf) {
-            $class = $converterConf->getFullQualifiedClassName();
-
-            $converter = new $class();
-
+            $converter = $this->createConverterInstance($converterConf);
             if ($chainConverter != null) {
                 $chainConverter->addConverter($converter);
             } else {
                 $this->addConverter($key, $converter);
             }
         }
+    }
+
+    /**
+     * @param ConverterConfiguration $converterConf
+     *
+     * @return mixed
+     */
+    protected function createConverterInstance(ConverterConfiguration $converterConf)
+    {
+        $class = $converterConf->getFullQualifiedClassName();
+
+        $converter = new $class($converterConf->getParameters());
+
+        return $converter;
     }
 }
