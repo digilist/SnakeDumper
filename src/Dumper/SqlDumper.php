@@ -80,7 +80,7 @@ class SqlDumper extends AbstractDumper
      */
     private function dumpTables(array $tables, Connection $conn, OutputInterface $output)
     {
-        $conn->setFetchMode(PDO::FETCH_NUM);
+        $conn->setFetchMode(PDO::FETCH_ASSOC);
 
         $platform = $conn->getDatabasePlatform();
         $pdo = $conn->getWrappedConnection();
@@ -109,8 +109,9 @@ class SqlDumper extends AbstractDumper
                 ->execute();
 
             foreach ($result as $row) {
+                $context = $row;
                 foreach ($row as $key => $value) {
-                    $value = $this->convert($tableName . '.' . $columnNames[$key], $value, $row);
+                    $value = $this->convert($tableName . '.' . $key, $value, $context);
 
                     if (is_null($value)) {
                         $value = 'NULL';
