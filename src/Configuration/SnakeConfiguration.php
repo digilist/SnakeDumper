@@ -21,11 +21,16 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     }
 
     /**
-     * @return ConfigurationInterface
+     * @return TableConfiguration[]
      */
     public function getTables()
     {
-        // TODO: Implement getAnonymize() method.
+        $tables = array();
+        foreach ($this->get('tables', array()) as $name => $table) {
+            $tables[] = new TableConfiguration($name, $table);
+        }
+
+        return $tables;
     }
 
     /**

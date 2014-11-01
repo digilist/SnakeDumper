@@ -25,7 +25,7 @@ interface DumperConfigurationInterface
     public function getOutput();
 
     /**
-     * @return array
+     * @return TableConfiguration[]
      */
     public function getTables();
 }

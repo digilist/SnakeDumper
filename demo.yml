@@ -9,9 +9,8 @@ database:
     password: ''
     dbname: frisuda_app
 tables:
-#    foo:
-#        ignore_content: false
+    foo:
+        ignore_content: false
 #        columns:
 #            name:
 #                - JohnDoe: ~
-#    properties:
