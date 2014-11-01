@@ -1,8 +1,8 @@
 <?php
 
-namespace Digilist\SnakeDumper\Converter\ValueConverter;
+namespace Digilist\SnakeDumper\Converter;
 
-class NullValueConverter implements ValueConverterInterface
+class NullConverter implements ConverterInterface
 {
 
     /**

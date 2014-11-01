@@ -89,6 +89,12 @@ class SqlDumper extends AbstractDumper
             $qb = $conn->createQueryBuilder();
 
             $tableName = $table->getQuotedName($platform);
+            $columnNames = array_values(array_map(
+                function (Column $column) use ($platform) {
+                    return $column->getName();
+                },
+                $table->getColumns()
+            ));
             $columns = array_map(
                 function (Column $column) use ($platform) {
                     return $column->getQuotedName($platform);
@@ -104,7 +110,7 @@ class SqlDumper extends AbstractDumper
 
             foreach ($result as $row) {
                 foreach ($row as $key => $value) {
-                    $value = $this->convert($table, $key, $value, $row);
+                    $value = $this->convert($tableName . '.' . $columnNames[$key], $value, $row);
 
                     if (is_null($value)) {
                         $value = 'NULL';

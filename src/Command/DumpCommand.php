@@ -4,15 +4,15 @@ namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
-use Digilist\SnakeDumper\Converter\Converter;
+use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
+use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Yaml\Yaml;
 
 class DumpCommand extends Command
@@ -33,7 +33,7 @@ class DumpCommand extends Command
         $class = $config->getFullQualifiedDumper();
         $dumper = new $class();
 
-        $dumper->setConverter(new Converter());
+        $dumper->setConverter(new SqlConverterService($config));
         $dumper->dump($config, $output);
     }
 

@@ -3,32 +3,32 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Converter\ConverterInterface;
+use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
 
 abstract class AbstractDumper implements DumperInterface
 {
 
     /**
-     * @var ConverterInterface
+     * @var ConverterServiceInterface
      */
     private $converter;
 
     /**
-     * @param string  $table
-     * @param string  $column
+     * @param string  $key
      * @param string  $value
      * @param array   $context
      *
      * @return mixed
      */
-    protected  function convert($table, $column, $value, array $context = [])
+    protected  function convert($key, $value, array $context = [])
     {
-        $this->converter->convert($table, $column, $value, $context);
+        return $this->converter->convert($key, $value, $context);
     }
 
     /**
-     * @param ConverterInterface $converter
+     * @param ConverterServiceInterface $converter
      */
-     public function setConverter(ConverterInterface $converter)
+     public function setConverter(ConverterServiceInterface $converter)
      {
          $this->converter = $converter;
      }
