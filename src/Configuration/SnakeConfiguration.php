@@ -40,12 +40,19 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     }
 
     /**
+     * Returns the table for configuration of the table with the passed name. If there is no configuration,
+     * null will be returned.
+     *
      * @param string $name
      *
      * @return TableConfiguration
      */
     public function getTable($name)
     {
+        if (!array_key_exists($name, $this->tables)) {
+            return null;
+        }
+
         return $this->tables[$name];
     }
 

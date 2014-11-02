@@ -45,12 +45,13 @@ class SnakeConfigurationTree implements ConfigurationInterface
             ->end()
         ;
 
-        $tablePrototype = $rootChildrenNode
+        $rootChildrenNode
             ->arrayNode('tables')
                 ->prototype('array')
                     ->children()
                         ->booleanNode('ignore_table')->defaultFalse()->end()
                         ->booleanNode('ignore_content')->defaultFalse()->end()
+                        ->scalarNode('query')->end()
                         ->variableNode('columns')->end()
                     ->end()
                 ->end()

@@ -18,10 +18,18 @@ tables:
     foo:
         columns:
             name:
-                - JohnDoe: ~
+                - JohnDoe
             street:
-                - StreetName: ~
+                - StreetName
             website:
                 - Conditional:
                     condition: "$website != ''"
                     if_true: 'http://www.google.de'
+    foo_custom:
+        query: >
+            SELECT *, bar.value1 AS xyz
+            FROM foo_custom
+            JOIN bar
+        columns:
+            name:
+                - JohnDoe

@@ -78,6 +78,24 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
+     * @return string
+     */
+    public function getQuery()
+    {
+        return $this->get('query');
+    }
+
+    /**
+     * @param string $query
+     *
+     * @return string
+     */
+    public function setQuery($query)
+    {
+        return $this->set('query', $query);
+    }
+
+    /**
      * @return ColumnConfiguration[]
      */
     public function getColumns()

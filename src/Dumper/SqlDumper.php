@@ -3,6 +3,7 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
+use Digilist\SnakeDumper\Configuration\TableConfiguration;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -64,7 +65,7 @@ class SqlDumper extends AbstractDumper
         ];
 
         foreach ($tables as $table) {
-            if ($config->hasTable($table->getName()) && $config->getTable($table->getName)->isTableIgnored()) {
+            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isTableIgnored()) {
                 continue;
             }
 
@@ -99,27 +100,33 @@ class SqlDumper extends AbstractDumper
         $conn->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
         foreach ($tables as $table) {
+            $tableConfig = $config->getTable($table->getName());
+
             // check if table contents are ignored
-            if ($config->hasTable($table->getName())) {
-                $tableConfig = $config->getTable($table->getName());
+            if ($tableConfig != null) {
                 if ($tableConfig->isContentIgnored() || $tableConfig->isTableIgnored()) {
                     continue;
                 }
             }
 
-            $this->dumpTable($table, $conn, $output);
+            $this->dumpTable($tableConfig, $table, $conn, $output);
         }
     }
 
     /**
      * Dumps the contents of a single table.
      *
-     * @param Table           $table
-     * @param Connection      $conn
-     * @param OutputInterface $output
+     * @param TableConfiguration $tableConfig
+     * @param Table              $table
+     * @param Connection         $conn
+     * @param OutputInterface    $output
      */
-    private function dumpTable(Table $table, Connection $conn, OutputInterface $output)
-    {
+    private function dumpTable(
+        TableConfiguration $tableConfig = null,
+        Table $table,
+        Connection $conn,
+        OutputInterface $output
+    ) {
         $platform = $conn->getDatabasePlatform();
         $pdo = $conn->getWrappedConnection();
 
@@ -127,10 +134,15 @@ class SqlDumper extends AbstractDumper
         $columns = $this->getColumnsForInsertStatement($table, $platform);
 
         /** @var Statement $result */
-        $result = $conn->createQueryBuilder()
-            ->select('*')
-            ->from($table->getName(), 't')
-            ->execute();
+        if ($tableConfig != null && $tableConfig->getQuery() != null) {
+            $result = $conn->prepare($tableConfig->getQuery());
+            $result->execute();
+        } else {
+            $result = $conn->createQueryBuilder()
+                ->select('*')
+                ->from($table->getName(), 't')
+                ->execute();
+        }
 
         foreach ($result as $row) {
             $context = $row;
