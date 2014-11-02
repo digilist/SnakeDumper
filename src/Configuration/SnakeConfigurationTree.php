@@ -52,6 +52,8 @@ class SnakeConfigurationTree implements ConfigurationInterface
                         ->booleanNode('ignore_table')->defaultFalse()->end()
                         ->booleanNode('ignore_content')->defaultFalse()->end()
                         ->scalarNode('query')->end()
+                        ->scalarNode('orderBy')->end()
+                        ->integerNode('limit')->end()
                         ->variableNode('columns')->end()
                     ->end()
                 ->end()

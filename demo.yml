@@ -16,6 +16,8 @@ tables:
     foo_no_content:
         ignore_content: true
     foo:
+        orderBy: id ASC
+        limit: 100
         columns:
             name:
                 - JohnDoe

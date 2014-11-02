@@ -138,10 +138,20 @@ class SqlDumper extends AbstractDumper
             $result = $conn->prepare($tableConfig->getQuery());
             $result->execute();
         } else {
-            $result = $conn->createQueryBuilder()
+            $qb = $conn->createQueryBuilder()
                 ->select('*')
-                ->from($table->getName(), 't')
-                ->execute();
+                ->from($table->getName(), 't');
+
+            if ($tableConfig != null) {
+                if ($tableConfig->getLimit() != null) {
+                    $qb->setMaxResults($tableConfig->getLimit());
+                }
+                if ($tableConfig->getOrderBy() != null) {
+                    $qb->add('orderBy', $tableConfig->getOrderBy());
+                }
+            }
+
+            $result = $qb->execute();
         }
 
         foreach ($result as $row) {

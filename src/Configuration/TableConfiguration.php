@@ -80,6 +80,42 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * @return string
      */
+    public function getOrderBy()
+    {
+        return $this->get('orderBy');
+    }
+
+    /**
+     * @param string $orderBy
+     *
+     * @return $this
+     */
+    public function setOrderBy($orderBy)
+    {
+        return $this->set('orderBy', $orderBy);
+    }
+
+    /**
+     * @return int
+     */
+    public function getLimit()
+    {
+        return $this->get('limit');
+    }
+
+    /**
+     * @param int $limit
+     *
+     * @return $this
+     */
+    public function setLimit($limit)
+    {
+        return $this->set('limit', $limit);
+    }
+
+    /**
+     * @return string
+     */
     public function getQuery()
     {
         return $this->get('query');

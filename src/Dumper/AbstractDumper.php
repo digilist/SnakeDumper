@@ -28,7 +28,7 @@ abstract class AbstractDumper implements DumperInterface
      *
      * @return mixed
      */
-    protected function convert($key, $value, array $context = [])
+    protected function convert($key, $value, array $context = array())
     {
         return $this->converterService->convert($key, $value, $context);
     }
