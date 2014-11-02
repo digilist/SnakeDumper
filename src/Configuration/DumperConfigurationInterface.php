@@ -24,4 +24,18 @@ interface DumperConfigurationInterface
      * @return TableConfiguration[]
      */
     public function getTables();
+
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasTable($name);
+
+    /**
+     * @param string $name
+     *
+     * @return TableConfiguration
+     */
+    public function getTable($name);
 }

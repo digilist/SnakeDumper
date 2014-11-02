@@ -5,7 +5,15 @@ namespace Digilist\SnakeDumper\Configuration;
 class TableConfiguration extends AbstractConfiguration
 {
 
+    /**
+     * @var string
+     */
     private $name;
+
+    /**
+     * @var ColumnConfiguration[]
+     */
+    private $columns = array();
 
     /**
      * @param string $name
@@ -57,16 +65,34 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function getColumns()
     {
-        $columns = array();
-        foreach ($this->get('columns', array()) as $name => $column) {
-            $columns[$name] = new ColumnConfiguration($name, $column);
-        }
+        return $this->columns;
+    }
 
-        return $columns;
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasColumn($name)
+    {
+        return array_key_exists($name, $this->columns);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return ColumnConfiguration
+     */
+    public function getColumn($name)
+    {
+        return $this->columns[$name];
     }
 
     protected function parseConfig(array $config)
     {
-        // TODO: Implement parseConfig() method.
+        // parse columns
+        foreach ($this->get('columns', array()) as $name => $column) {
+            $this->columns[$name] = new ColumnConfiguration($name, $column);
+        }
     }
 }

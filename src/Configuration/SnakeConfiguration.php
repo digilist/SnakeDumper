@@ -9,6 +9,11 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     private $output;
 
     /**
+     * @var TableConfiguration[]
+     */
+    private $tables = array();
+
+    /**
      * @return DatabaseConfiguration
      */
     public function getDatabase()
@@ -21,12 +26,27 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function getTables()
     {
-        $tables = array();
-        foreach ($this->get('tables', array()) as $name => $table) {
-            $tables[$name] = new TableConfiguration($name, $table);
-        }
+        return $this->tables;
+    }
 
-        return $tables;
+    /**
+     * @param string $name
+     *
+     * @return bool
+     */
+    public function hasTable($name)
+    {
+        return array_key_exists($name, $this->tables);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return TableConfiguration
+     */
+    public function getTable($name)
+    {
+        return $this->tables[$name];
     }
 
     /**
@@ -34,7 +54,7 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function getDumper()
     {
-        return $this->get('dumper', null);
+        return $this->get('dumper');
     }
 
     /**
@@ -57,5 +77,10 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     {
         $this->database = new DatabaseConfiguration($this->get('database', null));
         $this->output = new OutputConfiguration($this->get('output', null));
+
+        // parse tables
+        foreach ($this->get('tables', array()) as $name => $table) {
+            $this->tables[$name] = new TableConfiguration($name, $table);
+        }
     }
 }

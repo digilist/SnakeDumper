@@ -16,6 +16,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 class SqlDumper extends AbstractDumper
 {
 
+    /**
+     * {@inheritdoc}
+     */
     public function dump(DumperConfigurationInterface $config, OutputInterface $output)
     {
         $dbalConfig = new Configuration();
@@ -40,18 +43,19 @@ class SqlDumper extends AbstractDumper
         $sm = $conn->getSchemaManager();
         $tables = $sm->listTables();
 
-        $this->dumpTableSchema($tables, $conn->getDatabasePlatform(), $output);
-        $this->dumpTables($tables, $conn, $output);
+        $this->dumpTableSchema($config, $tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpTables($config, $tables, $conn, $output);
     }
 
     /**
-     * @param Table[]          $tables
-     * @param AbstractPlatform $platform
-     * @param OutputInterface  $output
+     * @param DumperConfigurationInterface $config
+     * @param Table[]                      $tables
+     * @param AbstractPlatform             $platform
+     * @param OutputInterface              $output
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function dumpTableSchema(array $tables, AbstractPlatform $platform, OutputInterface $output)
+    private function dumpTableSchema(DumperConfigurationInterface $config, array $tables, AbstractPlatform $platform, OutputInterface $output)
     {
         $schema = [
             'tables' => [],
@@ -75,57 +79,94 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
-     * @param Table[]         $tables
-     * @param Connection      $conn
-     * @param OutputInterface $output
+     * @param DumperConfigurationInterface $config
+     * @param Table[]                      $tables
+     * @param Connection                   $conn
+     * @param OutputInterface              $output
      */
-    private function dumpTables(array $tables, Connection $conn, OutputInterface $output)
+    private function dumpTables(DumperConfigurationInterface $config, array $tables, Connection $conn, OutputInterface $output)
     {
         $conn->setFetchMode(PDO::FETCH_ASSOC);
         $conn->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
-        $platform = $conn->getDatabasePlatform();
-        $pdo = $conn->getWrappedConnection();
-
         foreach ($tables as $table) {
-            $qb = $conn->createQueryBuilder();
-
-            $tableName = $table->getQuotedName($platform);
-            $columns = array_map(
-                function (Column $column) use ($platform) {
-                    return $column->getQuotedName($platform);
-                },
-                $table->getColumns()
-            );
-            $columns = implode(', ', $columns);
-
-            /** @var Statement $result */
-            $result = $qb->select('*')
-                ->from($table->getName(), 't')
-                ->execute();
-
-            foreach ($result as $row) {
-                $context = $row;
-                foreach ($row as $key => $value) {
-                    $value = $this->convert($tableName . '.' . $key, $value, $context);
-
-                    if (is_null($value)) {
-                        $value = 'NULL';
-                    } elseif (!ctype_digit($value)) {
-                        $value = $pdo->quote($value);
-                    }
-
-                    $row[$key] = $value;
-                }
-
-                $query = 'INSERT INTO ' . $tableName . ' (' . $columns . ')' .
-                    ' VALUES (' . implode(', ', $row) . ');';
-
-                $output->writeln($query);
+            // check if table contents are ignored
+            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isContentIgnored()) {
+                continue;
             }
+
+            $this->dumpTable($table, $conn, $output);
         }
     }
 
+    /**
+     * Dumps the contents of a single table.
+     *
+     * @param Table           $table
+     * @param Connection      $conn
+     * @param OutputInterface $output
+     */
+    private function dumpTable(Table $table, Connection $conn, OutputInterface $output)
+    {
+        $platform = $conn->getDatabasePlatform();
+        $pdo = $conn->getWrappedConnection();
+
+        $tableName = $table->getQuotedName($platform);
+        $columns = $this->getColumnsForInsertStatement($table, $platform);
+
+        /** @var Statement $result */
+        $result = $conn->createQueryBuilder()
+            ->select('*')
+            ->from($table->getName(), 't')
+            ->execute();
+
+        foreach ($result as $row) {
+            $context = $row;
+            foreach ($row as $key => $value) {
+                $value = $this->convert($tableName . '.' . $key, $value, $context);
+
+                if (is_null($value)) {
+                    $value = 'NULL';
+                } elseif (!ctype_digit($value)) {
+                    $value = $pdo->quote($value);
+                }
+
+                $row[$key] = $value;
+            }
+
+            $query = 'INSERT INTO ' . $tableName . ' (' . $columns . ')' .
+                ' VALUES (' . implode(', ', $row) . ');';
+
+            $output->writeln($query);
+        }
+    }
+
+    /**
+     * Returns the columns of a table to use it in the insert statement.
+     *
+     * @param Table            $table
+     * @param AbstractPlatform $platform
+     *
+     * @return string
+     */
+    private function getColumnsForInsertStatement(Table $table, AbstractPlatform $platform)
+    {
+        $columns = array_map(
+            function (Column $column) use ($platform) {
+                return $column->getQuotedName($platform);
+            },
+            $table->getColumns()
+        );
+        return implode(', ', $columns);
+    }
+
+    /**
+     * Combines multiple queries.
+     *
+     * @param $queries
+     *
+     * @return string
+     */
     private function implodeQueries($queries)
     {
         return implode(";\n", $queries);

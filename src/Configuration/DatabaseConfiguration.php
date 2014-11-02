@@ -27,7 +27,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getDriver()
     {
-        return $this->get('driver', null);
+        return $this->get('driver');
     }
 
     /**
@@ -44,7 +44,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getHost()
     {
-        return $this->get('host', null);
+        return $this->get('host');
     }
 
     /**
@@ -61,7 +61,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getPassword()
     {
-        return $this->get('password', null);
+        return $this->get('password');
     }
 
     /**
@@ -78,7 +78,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getUser()
     {
-        return $this->get('user', null);
+        return $this->get('user');
     }
 
     /**
@@ -95,7 +95,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getCharset()
     {
-        return $this->get('charset', null);
+        return $this->get('charset');
     }
 
     /**

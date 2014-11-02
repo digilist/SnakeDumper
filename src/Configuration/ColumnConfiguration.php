@@ -5,7 +5,15 @@ namespace Digilist\SnakeDumper\Configuration;
 class ColumnConfiguration extends AbstractConfiguration
 {
 
+    /**
+     * @var string
+     */
     private $name;
+
+    /**
+     * @var ConverterConfiguration[]
+     */
+    private $converters;
 
     /**
      * @param string $name
@@ -40,7 +48,22 @@ class ColumnConfiguration extends AbstractConfiguration
      */
     public function getConverters()
     {
-        $converters = array();
+        return $this->converters;
+    }
+
+    /**
+     * @param array $config
+     */
+    protected function parseConfig(array $config)
+    {
+        $this->parseConverters();
+    }
+
+    /**
+     *
+     */
+    private function parseConverters()
+    {
         foreach ($this->toArray() as $converterDef) {
 
             $parameter = null;
@@ -53,14 +76,7 @@ class ColumnConfiguration extends AbstractConfiguration
                 $className = $converterDef;
             }
 
-            $converters[] = new ConverterConfiguration($className, $parameter);
+            $this->converters[] = new ConverterConfiguration($className, $parameter);
         }
-
-        return $converters;
-    }
-
-    protected function parseConfig(array $config)
-    {
-        // TODO: Implement parseConfig() method.
     }
 }
