@@ -82,6 +82,7 @@ class SqlDumper extends AbstractDumper
     private function dumpTables(array $tables, Connection $conn, OutputInterface $output)
     {
         $conn->setFetchMode(PDO::FETCH_ASSOC);
+        $conn->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
         $platform = $conn->getDatabasePlatform();
         $pdo = $conn->getWrappedConnection();
@@ -90,12 +91,6 @@ class SqlDumper extends AbstractDumper
             $qb = $conn->createQueryBuilder();
 
             $tableName = $table->getQuotedName($platform);
-            $columnNames = array_values(array_map(
-                function (Column $column) use ($platform) {
-                    return $column->getName();
-                },
-                $table->getColumns()
-            ));
             $columns = array_map(
                 function (Column $column) use ($platform) {
                     return $column->getQuotedName($platform);

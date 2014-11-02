@@ -9,6 +9,7 @@ database:
     password: ''
     dbname: demo
     charset: UTF8
+
 tables:
     foo:
         ignore_content: false
