@@ -55,8 +55,12 @@ class SqlDumper extends AbstractDumper
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function dumpTableSchema(DumperConfigurationInterface $config, array $tables, AbstractPlatform $platform, OutputInterface $output)
-    {
+    private function dumpTableSchema(
+        DumperConfigurationInterface $config,
+        array $tables,
+        AbstractPlatform $platform,
+        OutputInterface $output
+    ) {
         $schema = [
             'tables' => [],
             'constraints' => [],
@@ -84,8 +88,12 @@ class SqlDumper extends AbstractDumper
      * @param Connection                   $conn
      * @param OutputInterface              $output
      */
-    private function dumpTables(DumperConfigurationInterface $config, array $tables, Connection $conn, OutputInterface $output)
-    {
+    private function dumpTables(
+        DumperConfigurationInterface $config,
+        array $tables,
+        Connection $conn,
+        OutputInterface $output
+    ) {
         $conn->setFetchMode(PDO::FETCH_ASSOC);
         $conn->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
