@@ -33,16 +33,16 @@ class ConditionalConverter implements ConverterInterface
         if (empty($parameters['condition'])) {
             throw new InvalidArgumentException('You have to pass a condition');
         }
-        if (empty($parameters['ifTrue']) && empty($parameters['ifFalse'])) {
-            throw new InvalidArgumentException('You have to pass either a ifTrue or ifFalse value.');
+        if (empty($parameters['if_true']) && empty($parameters['if_false'])) {
+            throw new InvalidArgumentException('You have to pass either a if_true or if_false value.');
         }
 
         $this->condition = $parameters['condition'];
-        if (isset($parameters['ifTrue'])) {
-            $this->ifTrue = $parameters['ifTrue'];
+        if (isset($parameters['if_true'])) {
+            $this->ifTrue = $parameters['if_true'];
         }
-        if (isset($parameters['ifFalse'])) {
-            $this->ifFalse = $parameters['ifFalse'];
+        if (isset($parameters['if_false'])) {
+            $this->ifFalse = $parameters['if_false'];
         }
     }
 
