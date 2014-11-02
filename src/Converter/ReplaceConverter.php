@@ -20,8 +20,6 @@ class ReplaceConverter implements ConverterInterface
 
     /**
      * @param array $parameters
-     *
-     * @internal param string $replace
      */
     public function __construct(array $parameters)
     {

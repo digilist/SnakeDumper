@@ -11,7 +11,6 @@ interface ConverterInterface
      * @param string $value
      * @param array  $context
      *
-     * @internal param string $key
      * @return string
      */
     public function convert($value, array $context = array());
