@@ -3,11 +3,13 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
+use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\TableConfiguration;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Statement;
@@ -41,11 +43,38 @@ class SqlDumper extends AbstractDumper
         $sm = $conn->getSchemaManager();
         $tables = $sm->listTables();
 
-        $this->dumpTableSchema($config, $tables, $conn->getDatabasePlatform(), $output);
-        $this->dumpTables($config, $tables, $conn, $output);
+        $this->dumpPreamble($config, $conn->getDatabasePlatform(), $output);
+        $this->dumpTableStructure($config, $tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpContents($config, $tables, $conn, $output);
+        $this->dumpConstraints($config, $tables, $conn->getDatabasePlatform(), $output);
     }
 
     /**
+     * @param DumperConfigurationInterface $config
+     * @param AbstractPlatform             $platform
+     * @param OutputInterface              $output
+     */
+    private function dumpPreamble(
+        DumperConfigurationInterface $config,
+        AbstractPlatform $platform,
+        OutputInterface $output
+    ) {
+
+        $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
+        $output->writeln($platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
+        $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
+        $output->writeln('');
+
+        if ($platform instanceof MySqlPlatform) {
+            $output->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
+        }
+
+        // TODO support other platforms
+    }
+
+    /**
+     * Dumps the table structures.
+     *
      * @param DumperConfigurationInterface $config
      * @param Table[]                      $tables
      * @param AbstractPlatform             $platform
@@ -53,35 +82,22 @@ class SqlDumper extends AbstractDumper
      *
      * @throws \Doctrine\DBAL\DBALException
      */
-    private function dumpTableSchema(
+    private function dumpTableStructure(
         DumperConfigurationInterface $config,
         array $tables,
         AbstractPlatform $platform,
         OutputInterface $output
     ) {
-        $schema = [
-            'tables' => [],
-            'constraints' => [],
-        ];
-
         foreach ($tables as $table) {
             if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isTableIgnored()) {
                 continue;
             }
 
-            $schema['tables'][] = $platform->getCreateTableSQL($table); // CREATE TABLE + indexes
-            foreach ($table->getForeignKeys() as $constraint) {
-                $schema['constraints'][] = $platform->getCreateConstraintSQL($constraint, $table);
-            }
+            $structure = $platform->getCreateTableSQL($table);
+            $structure = $this->implodeQueries($structure);
+
+            $output->writeln($structure);
         }
-
-        $schema['tables'] = array_map([$this, 'implodeQueries'], $schema['tables']);
-        $schema['tables'] = $this->implodeQueries($schema['tables']);
-        $schema['constraints'] = $this->implodeQueries($schema['constraints']);
-
-        $schema = $this->implodeQueries($schema);
-
-        $output->writeln($schema . ';');
     }
 
     /**
@@ -90,7 +106,7 @@ class SqlDumper extends AbstractDumper
      * @param Connection                   $conn
      * @param OutputInterface              $output
      */
-    private function dumpTables(
+    private function dumpContents(
         DumperConfigurationInterface $config,
         array $tables,
         Connection $conn,
@@ -176,6 +192,33 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
+     * Dump the constraints / foreign keys of all tables.
+     *
+     * @param SnakeConfiguration $config
+     * @param Table[]            $tables
+     * @param AbstractPlatform   $platform
+     * @param OutputInterface    $output
+     */
+    private function dumpConstraints(
+        SnakeConfiguration $config,
+        array $tables,
+        AbstractPlatform $platform,
+        OutputInterface $output
+    ) {
+        foreach ($tables as $table) {
+            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isTableIgnored()) {
+                continue;
+            }
+
+            foreach ($table->getForeignKeys() as $constraint) {
+                $constraint = $platform->getCreateConstraintSQL($constraint, $table);
+
+                $output->writeln($constraint . ';');
+            }
+        }
+    }
+
+    /**
      * Returns the columns of a table to use it in the insert statement.
      *
      * @param Table            $table
@@ -203,6 +246,6 @@ class SqlDumper extends AbstractDumper
      */
     private function implodeQueries($queries)
     {
-        return implode(";\n", $queries);
+        return implode(";\n", $queries) . ';';
     }
 }
