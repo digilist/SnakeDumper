@@ -11,11 +11,17 @@ database:
     charset: UTF8
 
 tables:
+    foo_ignored:
+        ignore_table: true
+    foo_no_content:
+        ignore_content: true
     foo:
-        ignore_content: false
         columns:
             name:
                 - JohnDoe: ~
-                - JohnDoe:
-                    bla: foo
-                    baz: bar
+            street:
+                - StreetName: ~
+            website:
+                - Conditional:
+                    condition: "$website != ''"
+                    if_true: 'http://www.google.de'

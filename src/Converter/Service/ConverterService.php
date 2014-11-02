@@ -6,6 +6,7 @@ use Digilist\SnakeDumper\Configuration\ConverterConfiguration;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Converter\ConverterInterface;
+use Digilist\SnakeDumper\Exception\InvalidConverterException;
 use ReflectionClass;
 
 abstract class ConverterService implements ConverterServiceInterface
@@ -87,11 +88,16 @@ abstract class ConverterService implements ConverterServiceInterface
     /**
      * @param ConverterConfiguration $converterConf
      *
-     * @return mixed
+     * @throws InvalidConverterException
+     * @return ConverterInterface
      */
     protected function createConverterInstance(ConverterConfiguration $converterConf)
     {
         $class = $converterConf->getFullQualifiedClassName();
+        if (!class_exists($class)) {
+            $message = sprintf('The converter "%s" (%s) does not exist.', $converterConf->getClassName(), $class);
+            throw new InvalidConverterException($message);
+        }
 
         $converter = new $class($converterConf->getParameters());
 

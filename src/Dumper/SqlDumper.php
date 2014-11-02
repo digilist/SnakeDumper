@@ -23,9 +23,6 @@ class SqlDumper extends AbstractDumper
     {
         $dbalConfig = new Configuration();
 
-//        $logger = new ConsoleLogger($output);
-//        $dbalConfig->setSQLLogger(new PsrSQLLogger($logger));
-
         $connectionParams = array(
             'driver' => $config->getDatabase()->getDriver(),
             'host' => $config->getDatabase()->getHost(),
@@ -67,6 +64,10 @@ class SqlDumper extends AbstractDumper
         ];
 
         foreach ($tables as $table) {
+            if ($config->hasTable($table->getName()) && $config->getTable($table->getName)->isTableIgnored()) {
+                continue;
+            }
+
             $schema['tables'][] = $platform->getCreateTableSQL($table); // CREATE TABLE + indexes
             foreach ($table->getForeignKeys() as $constraint) {
                 $schema['constraints'][] = $platform->getCreateConstraintSQL($constraint, $table);
@@ -99,8 +100,11 @@ class SqlDumper extends AbstractDumper
 
         foreach ($tables as $table) {
             // check if table contents are ignored
-            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isContentIgnored()) {
-                continue;
+            if ($config->hasTable($table->getName())) {
+                $tableConfig = $config->getTable($table->getName());
+                if ($tableConfig->isContentIgnored() || $tableConfig->isTableIgnored()) {
+                    continue;
+                }
             }
 
             $this->dumpTable($table, $conn, $output);

@@ -46,6 +46,23 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * @return bool
      */
+    public function isTableIgnored()
+    {
+        return $this->get('ignore_table', false);
+    }
+
+    /**
+     * @param bool $value
+     * @return $this
+     */
+    public function setIgnoreTable($value)
+    {
+        return $this->set('ignore_table', (bool) $value);
+    }
+
+    /**
+     * @return bool
+     */
     public function isContentIgnored()
     {
         return $this->get('ignore_content', false);
@@ -57,7 +74,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function setIgnoreContent($value)
     {
-        return $this->get('ignore_content', boolval($value));
+        return $this->set('ignore_content', boolval($value));
     }
 
     /**
