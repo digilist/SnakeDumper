@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
+use Digilist\SnakeDumper\Exception\InvalidArgumentException;
+
 /**
  * The RandomConverter inserts random numbers.
  *
@@ -11,31 +13,45 @@ class RandomConverter implements ConverterInterface
 {
 
     /**
-     * @var int
+     * @var float
      */
     private $min;
 
     /**
-     * @var int
+     * @var float
      */
     private $max;
+
+    /**
+     * @var float|null
+     */
+    private $step;
 
     /**
      * @param array $parameters
      */
     public function __construct(array $parameters = array())
     {
-        $this->min = 0;
+        $this->min = 0.0;
         $this->max = mt_getrandmax();
 
         // Sets minimum random int parameter
         if (isset($parameters['min'])) {
-            $this->min = intval($parameters['min']);
+            $this->min = floatval($parameters['min']);
         }
 
         // Sets maximum random int parameter
         if (isset($parameters['max'])) {
-            $this->max = intval($parameters['max']);
+            $this->max = floatval($parameters['max']);
+        }
+
+        // Sets step in which random numbers occur
+        if (isset($parameters['step'])) {
+            $this->step = floatval($parameters['step']);
+
+            if ($this->step <= 0) {
+                throw new InvalidArgumentException('Step must be greater than zero');
+            }
         }
 
         // Swap min and max if max < min
@@ -47,7 +63,7 @@ class RandomConverter implements ConverterInterface
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getMax()
     {
@@ -55,11 +71,19 @@ class RandomConverter implements ConverterInterface
     }
 
     /**
-     * @return int
+     * @return float
      */
     public function getMin()
     {
         return $this->min;
+    }
+
+    /**
+     * @return float|null
+     */
+    public function getStep()
+    {
+        return $this->step;
     }
 
     /**
@@ -70,6 +94,10 @@ class RandomConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        return mt_rand($this->min, $this->max);
+        if (null === $this->step) {
+            return mt_rand($this->min, $this->max);
+        }
+
+        return round(mt_rand($this->min, $this->max) / $this->step) * $this->step;
     }
 }
