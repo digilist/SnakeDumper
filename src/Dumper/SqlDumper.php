@@ -262,7 +262,7 @@ class SqlDumper extends AbstractDumper
             foreach ($table->getIndexes() as $index) {
                 $indexes[] = new Index(
                     $platform->quoteIdentifier($index->getName()),
-                    $index->getColumns(),
+                    $this->quoteIdentifiers($platform, $index->getColumns()),
                     $index->isUnique(),
                     $index->isPrimary(),
                     $index->getFlags(),
@@ -273,9 +273,9 @@ class SqlDumper extends AbstractDumper
             $foreignKeys = array();
             foreach ($table->getForeignKeys() as $fk) {
                 $foreignKeys[] = new ForeignKeyConstraint(
-                    array_map(array($platform, 'quoteIdentifier'), $fk->getLocalColumns()),
+                    $this->quoteIdentifiers($platform, $fk->getLocalColumns()),
                     $platform->quoteIdentifier($fk->getForeignTableName()),
-                    array_map(array($platform, 'quoteIdentifier'), $fk->getForeignColumns()),
+                    $this->quoteIdentifiers($platform, $fk->getForeignColumns()),
                     $platform->quoteIdentifier($fk->getName()),
                     $fk->getOptions()
                 );
@@ -292,6 +292,19 @@ class SqlDumper extends AbstractDumper
         }
 
         return $tables;
+    }
+
+    /**
+     * Quote multiple identifiers.
+     *
+     * @param AbstractPlatform $platform
+     * @param array            $identifiers
+     *
+     * @return array
+     */
+    private function quoteIdentifiers(AbstractPlatform $platform, array $identifiers)
+    {
+        return array_map(array($platform, 'quoteIdentifier'), $identifiers);
     }
 
     /**
