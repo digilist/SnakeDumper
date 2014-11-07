@@ -11,6 +11,9 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\Identifier;
+use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Statement;
 use PDO;
@@ -40,12 +43,11 @@ class SqlDumper extends AbstractDumper
         $platform = $conn->getDatabasePlatform();
         $platform->registerDoctrineTypeMapping('enum', 'string');
 
-        $sm = $conn->getSchemaManager();
-        $tables = $sm->listTables();
+        $tables = $this->getTables($conn, $platform);
 
         $this->dumpPreamble($config, $conn->getDatabasePlatform(), $output);
         $this->dumpTableStructure($config, $tables, $conn->getDatabasePlatform(), $output);
-        $this->dumpContents($config, $tables, $conn, $output);
+        $this->dumpTableContents($config, $tables, $conn, $output);
         $this->dumpConstraints($config, $tables, $conn->getDatabasePlatform(), $output);
     }
 
@@ -106,7 +108,7 @@ class SqlDumper extends AbstractDumper
      * @param Connection                   $conn
      * @param OutputInterface              $output
      */
-    private function dumpContents(
+    private function dumpTableContents(
         DumperConfigurationInterface $config,
         array $tables,
         Connection $conn,
@@ -125,7 +127,7 @@ class SqlDumper extends AbstractDumper
                 }
             }
 
-            $this->dumpTable($tableConfig, $table, $conn, $output);
+            $this->dumpTableContent($tableConfig, $table, $conn, $output);
         }
     }
 
@@ -137,7 +139,7 @@ class SqlDumper extends AbstractDumper
      * @param Connection         $conn
      * @param OutputInterface    $output
      */
-    private function dumpTable(
+    private function dumpTableContent(
         TableConfiguration $tableConfig = null,
         Table $table,
         Connection $conn,
@@ -194,13 +196,13 @@ class SqlDumper extends AbstractDumper
     /**
      * Dump the constraints / foreign keys of all tables.
      *
-     * @param SnakeConfiguration $config
+     * @param DumperConfigurationInterface $config
      * @param Table[]            $tables
      * @param AbstractPlatform   $platform
      * @param OutputInterface    $output
      */
     private function dumpConstraints(
-        SnakeConfiguration $config,
+        DumperConfigurationInterface $config,
         array $tables,
         AbstractPlatform $platform,
         OutputInterface $output
@@ -247,5 +249,67 @@ class SqlDumper extends AbstractDumper
     private function implodeQueries($queries)
     {
         return implode(";\n", $queries) . ';';
+    }
+
+    /**
+     * Returns an array with all available tables.
+     *
+     * As Doctrine DBAL doesn't quote the names of tables, columns and indexes, this function does the job.
+     *
+     * @param Connection       $conn
+     * @param AbstractPlatform $platform
+     *
+     * @return Table[]
+     */
+    private function getTables(Connection $conn, AbstractPlatform $platform)
+    {
+        $sm = $conn->getSchemaManager();
+
+        $tables = array();
+        foreach ($sm->listTables() as $table) {
+
+            $columns = array();
+            foreach ($table->getColumns() as $column) {
+                $columns[] = new Column(
+                    $platform->quoteIdentifier($column->getName()),
+                    $column->getType(),
+                    $column->toArray()
+                );
+            }
+
+            $indexes = array();
+            foreach ($table->getIndexes() as $index) {
+                $indexes[] = new Index(
+                    $platform->quoteIdentifier($index->getName()),
+                    $index->getColumns(),
+                    $index->isUnique(),
+                    $index->isPrimary(),
+                    $index->getFlags(),
+                    $index->getOptions()
+                );
+            }
+
+            $foreignKeys = array();
+            foreach ($table->getForeignKeys() as $fk) {
+                $foreignKeys[] = new ForeignKeyConstraint(
+                    array_map(array($platform, 'quoteIdentifier'), $fk->getLocalColumns()),
+                    $platform->quoteIdentifier($fk->getForeignTableName()),
+                    array_map(array($platform, 'quoteIdentifier'), $fk->getForeignColumns()),
+                    $platform->quoteIdentifier($fk->getName()),
+                    $fk->getOptions()
+                );
+            }
+
+            $tables[] = new Table(
+                $platform->quoteIdentifier($table->getName()),
+                $columns,
+                $indexes,
+                $foreignKeys,
+                false,
+                array()
+            );
+        }
+
+        return $tables;
     }
 }
