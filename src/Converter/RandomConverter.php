@@ -26,7 +26,7 @@ class RandomConverter implements ConverterInterface
     public function __construct(array $parameters = array())
     {
         $this->min = 0;
-        $this->max = getrandmax();
+        $this->max = mt_getrandmax();
 
         // Sets minimum random int parameter
         if (isset($parameters['min'])) {
@@ -70,6 +70,6 @@ class RandomConverter implements ConverterInterface
      */
     public function convert($value, array $context = array())
     {
-        return rand($this->min, $this->max);
+        return mt_rand($this->min, $this->max);
     }
 }

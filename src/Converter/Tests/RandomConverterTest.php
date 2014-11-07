@@ -37,7 +37,7 @@ class RandomConverterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(100, $c1->getMax());
 
         $c1 = new RandomConverter();
-        $this->assertEquals(getrandmax(), $c1->getMax());
+        $this->assertEquals(mt_getrandmax(), $c1->getMax());
 
         $c1 = new RandomConverter(array('min' => 100, 'max' => 50));
         $this->assertEquals(100, $c1->getMax());
