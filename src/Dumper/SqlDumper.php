@@ -149,29 +149,9 @@ class SqlDumper extends AbstractDumper
         $pdo = $conn->getWrappedConnection();
 
         $tableName = $table->getQuotedName($platform);
-        $columns = $this->getColumnsForInsertStatement($table, $platform);
+        $insertColumns = null;
 
-        /** @var Statement $result */
-        if ($tableConfig != null && $tableConfig->getQuery() != null) {
-            $result = $conn->prepare($tableConfig->getQuery());
-            $result->execute();
-        } else {
-            $qb = $conn->createQueryBuilder()
-                ->select('*')
-                ->from($table->getName(), 't');
-
-            if ($tableConfig != null) {
-                if ($tableConfig->getLimit() != null) {
-                    $qb->setMaxResults($tableConfig->getLimit());
-                }
-                if ($tableConfig->getOrderBy() != null) {
-                    $qb->add('orderBy', $tableConfig->getOrderBy());
-                }
-            }
-
-            $result = $qb->execute();
-        }
-
+        $result = $this->executeSelectQuery($tableConfig, $table, $conn);
         foreach ($result as $row) {
             $context = $row;
             foreach ($row as $key => $value) {
@@ -186,7 +166,11 @@ class SqlDumper extends AbstractDumper
                 $row[$key] = $value;
             }
 
-            $query = 'INSERT INTO ' . $tableName . ' (' . $columns . ')' .
+            if ($insertColumns === null) {
+                $insertColumns = $this->extractInsertColumns($platform, array_keys($row));
+            }
+
+            $query = 'INSERT INTO ' . $tableName . ' (' . $insertColumns . ')' .
                 ' VALUES (' . implode(', ', $row) . ');';
 
             $output->writeln($query);
@@ -221,21 +205,19 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
-     * Returns the columns of a table to use it in the insert statement.
+     * Get a SQL-formatted string to
      *
-     * @param Table            $table
      * @param AbstractPlatform $platform
+     * @param array            $columns
      *
      * @return string
      */
-    private function getColumnsForInsertStatement(Table $table, AbstractPlatform $platform)
+    private function extractInsertColumns(AbstractPlatform $platform, $columns)
     {
-        $columns = array_map(
-            function (Column $column) use ($platform) {
-                return $column->getQuotedName($platform);
-            },
-            $table->getColumns()
-        );
+        $columns = array_map(function ($column) use ($platform) {
+            return $platform->quoteIdentifier($column);
+        }, $columns);
+
         return implode(', ', $columns);
     }
 
@@ -267,7 +249,6 @@ class SqlDumper extends AbstractDumper
 
         $tables = array();
         foreach ($sm->listTables() as $table) {
-
             $columns = array();
             foreach ($table->getColumns() as $column) {
                 $columns[] = new Column(
@@ -311,5 +292,40 @@ class SqlDumper extends AbstractDumper
         }
 
         return $tables;
+    }
+
+    /**
+     * @param TableConfiguration $tableConfig
+     * @param Table              $table
+     * @param Connection         $conn
+     *
+     * @return \Doctrine\DBAL\Driver\Statement
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function executeSelectQuery(TableConfiguration $tableConfig = null, Table $table, Connection $conn)
+    {
+        if ($tableConfig != null && $tableConfig->getQuery() != null) {
+            $result = $conn->prepare($tableConfig->getQuery());
+            $result->execute();
+
+            return $result;
+        }
+
+        $qb = $conn->createQueryBuilder()
+            ->select('*')
+            ->from($table->getName(), 't');
+
+        if ($tableConfig != null) {
+            if ($tableConfig->getLimit() != null) {
+                $qb->setMaxResults($tableConfig->getLimit());
+            }
+            if ($tableConfig->getOrderBy() != null) {
+                $qb->add('orderBy', $tableConfig->getOrderBy());
+            }
+        }
+
+        $result = $qb->execute();
+
+        return $result;
     }
 }
