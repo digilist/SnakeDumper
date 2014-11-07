@@ -10,6 +10,12 @@ database:
     dbname: demo
     charset: UTF8
 
+table_white_list:
+    - foo
+    - bla
+    - foo_no_content
+    - foo_ignored
+
 tables:
     foo_ignored:
         ignore_table: true

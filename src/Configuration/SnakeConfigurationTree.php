@@ -46,6 +46,13 @@ class SnakeConfigurationTree implements ConfigurationInterface
         ;
 
         $rootChildrenNode
+            ->arrayNode('table_white_list')
+                ->prototype('scalar')
+                ->end()
+            ->end()
+        ;
+
+        $rootChildrenNode
             ->arrayNode('tables')
                 ->prototype('array')
                     ->children()
