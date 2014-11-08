@@ -360,10 +360,16 @@ class SqlDumper extends AbstractDumper
          * @param Table $table
          * @return bool
          */
-        $filterClosure = function (Table $table) use ($whiteList)
-        {
+        $filterClosure = function (Table $table) use ($whiteList) {
             if (in_array($table->getName(), $whiteList)) {
                 return true;
+            }
+
+            // Check against wildcards etc.
+            foreach ($whiteList as $entry) {
+                if (fnmatch($entry, $table->getName())) {
+                    return true;
+                }
             }
 
             return false;
