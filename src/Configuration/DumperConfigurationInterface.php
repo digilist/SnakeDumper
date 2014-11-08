@@ -38,4 +38,9 @@ interface DumperConfigurationInterface
      * @return TableConfiguration
      */
     public function getTable($name);
+
+    /**
+     * @return array
+     */
+    public function getTableWhiteList();
 }

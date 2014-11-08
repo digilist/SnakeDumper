@@ -30,6 +30,14 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     }
 
     /**
+     * @return array
+     */
+    public function getTableWhiteList()
+    {
+        return $this->get('table_white_list', array());
+    }
+
+    /**
      * @param string $name
      *
      * @return bool

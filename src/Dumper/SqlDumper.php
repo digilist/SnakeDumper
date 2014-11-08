@@ -3,7 +3,6 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
 use Digilist\SnakeDumper\Configuration\TableConfiguration;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
@@ -12,10 +11,8 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
-use Doctrine\DBAL\Schema\Identifier;
 use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Statement;
 use PDO;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -45,6 +42,7 @@ class SqlDumper extends AbstractDumper
 
         $tables = $this->getTables($conn, $platform);
 
+        $tables = $this->filterWhiteListTables($config, $tables);
         $this->dumpPreamble($config, $conn->getDatabasePlatform(), $output);
         $this->dumpTableStructure($config, $tables, $conn->getDatabasePlatform(), $output);
         $this->dumpTableContents($config, $tables, $conn, $output);
@@ -340,5 +338,37 @@ class SqlDumper extends AbstractDumper
         $result = $qb->execute();
 
         return $result;
+    }
+
+    /**
+     * @param DumperConfigurationInterface $config
+     * @param Table[] $tables
+     * @return Table[]
+     */
+    private function filterWhiteListTables(DumperConfigurationInterface $config, array $tables)
+    {
+        $whiteList = $config->getTableWhiteList();
+
+        // Return all tables if white list is empty
+        if (empty($whiteList)) {
+            return $tables;
+        }
+
+        /**
+         * Filter closure to determine white listed tables.
+         *
+         * @param Table $table
+         * @return bool
+         */
+        $filterClosure = function (Table $table) use ($whiteList)
+        {
+            if (in_array($table->getName(), $whiteList)) {
+                return true;
+            }
+
+            return false;
+        };
+
+        return array_filter($tables, $filterClosure);
     }
 }
