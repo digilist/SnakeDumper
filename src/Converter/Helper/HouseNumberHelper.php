@@ -8,9 +8,9 @@ class HouseNumberHelper
     /**
      * @var array
      */
-    private static $letters = [
+    private static $letters = array(
         '', 'a', 'b', 'c', 'd', 'e', 'f'
-    ];
+    );
 
     /**
      * @return string
@@ -24,5 +24,4 @@ class HouseNumberHelper
 
         return $houseNumber;
     }
-
 }

@@ -14,5 +14,4 @@ interface ConverterInterface
      * @return string
      */
     public function convert($value, array $context = array());
-
 }
