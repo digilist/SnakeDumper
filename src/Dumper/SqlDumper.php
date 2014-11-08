@@ -24,8 +24,6 @@ class SqlDumper extends AbstractDumper
      */
     public function dump(DumperConfigurationInterface $config, OutputInterface $output)
     {
-        $dbalConfig = new Configuration();
-
         $connectionParams = array(
             'driver' => $config->getDatabase()->getDriver(),
             'host' => $config->getDatabase()->getHost(),
@@ -34,6 +32,8 @@ class SqlDumper extends AbstractDumper
             'dbname' => $config->getDatabase()->getDatabaseName(),
             'charset' => $config->getDatabase()->getCharset(),
         );
+
+        $dbalConfig = new Configuration();
         $conn = DriverManager::getConnection($connectionParams, $dbalConfig);
         $conn->connect();
 
@@ -45,10 +45,10 @@ class SqlDumper extends AbstractDumper
         $tables = $this->filterWhiteListTables($config, $tables);
         $tables = $this->filterIgnoredTables($config, $tables);
 
-        $this->dumpPreamble($config, $conn->getDatabasePlatform(), $output);
-        $this->dumpTableStructure($tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpPreamble($config, $platform, $output);
+        $this->dumpTableStructure($tables, $platform, $output);
         $this->dumpTableContents($config, $tables, $conn, $output);
-        $this->dumpConstraints($config, $tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpConstraints($config, $tables, $platform, $output);
     }
 
     /**
@@ -80,16 +80,13 @@ class SqlDumper extends AbstractDumper
      * @param Table[] $tables
      * @param AbstractPlatform $platform
      * @param OutputInterface $output
-     *
-     * @internal param \Digilist\SnakeDumper\Configuration\DumperConfigurationInterface $config
      */
     private function dumpTableStructure(array $tables, AbstractPlatform $platform, OutputInterface $output)
     {
         foreach ($tables as $table) {
             $structure = $platform->getCreateTableSQL($table);
-            $structure = $this->implodeQueries($structure);
 
-            $output->writeln($structure);
+            $output->writeln(implode(";\n", $structure) . ';');
         }
     }
 
@@ -112,10 +109,8 @@ class SqlDumper extends AbstractDumper
             $tableConfig = $config->getTable($table->getName());
 
             // check if table contents are ignored
-            if (null !== $tableConfig) {
-                if ($tableConfig->isContentIgnored()) {
-                    continue;
-                }
+            if (null !== $tableConfig && $tableConfig->isContentIgnored()) {
+                continue;
             }
 
             $this->dumpTableContent($tableConfig, $table, $conn, $output);
@@ -183,10 +178,6 @@ class SqlDumper extends AbstractDumper
         OutputInterface $output
     ) {
         foreach ($tables as $table) {
-            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isTableIgnored()) {
-                continue;
-            }
-
             foreach ($table->getForeignKeys() as $constraint) {
                 $constraint = $platform->getCreateConstraintSQL($constraint, $table);
 
@@ -210,18 +201,6 @@ class SqlDumper extends AbstractDumper
         }, $columns);
 
         return implode(', ', $columns);
-    }
-
-    /**
-     * Combines multiple queries.
-     *
-     * @param $queries
-     *
-     * @return string
-     */
-    private function implodeQueries($queries)
-    {
-        return implode(";\n", $queries) . ';';
     }
 
     /**
