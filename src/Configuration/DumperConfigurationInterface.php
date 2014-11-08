@@ -43,4 +43,10 @@ interface DumperConfigurationInterface
      * @return array
      */
     public function getTableWhiteList();
+
+    /**
+     * @param array $list
+     * @return $this
+     */
+    public function setTableWhiteList(array $list);
 }

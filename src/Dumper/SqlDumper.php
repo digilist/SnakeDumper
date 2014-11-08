@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Configuration\TableConfiguration;
+use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
@@ -42,8 +43,15 @@ class SqlDumper extends AbstractDumper
 
         // Retrieve list of tables
         $tables = $this->getTables($conn, $platform);
-        $tables = $this->filterWhiteListTables($config, $tables);
-        $tables = $this->filterIgnoredTables($config, $tables);
+
+        $filter = new TableFilter($config);
+        $tables = $filter->filterWhiteListTables($tables);
+        $tables = $filter->filterIgnoredTables($tables);
+
+        foreach ($tables as $table) {
+            var_dump($table->getName());
+        }
+        exit;
 
         $this->dumpPreamble($config, $platform, $output);
         $this->dumpTableStructure($tables, $platform, $output);
@@ -310,65 +318,5 @@ class SqlDumper extends AbstractDumper
         $result = $qb->execute();
 
         return $result;
-    }
-
-    /**
-     * @param DumperConfigurationInterface $config
-     * @param Table[] $tables
-     * @return Table[]
-     */
-    private function filterWhiteListTables(DumperConfigurationInterface $config, array $tables)
-    {
-        $whiteList = $config->getTableWhiteList();
-
-        // Return all tables if white list is empty
-        if (empty($whiteList)) {
-            return $tables;
-        }
-
-        /**
-         * Filter closure to determine white listed tables.
-         *
-         * @param Table $table
-         * @return bool
-         */
-        $filterClosure = function (Table $table) use ($whiteList) {
-            if (in_array($table->getName(), $whiteList)) {
-                return true;
-            }
-
-            // Check against wildcards etc.
-            foreach ($whiteList as $entry) {
-                if (fnmatch($entry, $table->getName())) {
-                    return true;
-                }
-            }
-
-            return false;
-        };
-
-        return array_filter($tables, $filterClosure);
-    }
-
-    /**
-     * @param DumperConfigurationInterface $config
-     * @param Table[] $tables
-     * @return Table[]
-     */
-    private function filterIgnoredTables(DumperConfigurationInterface $config, array $tables)
-    {
-        /**
-         * @param Table $table
-         * @return bool
-         */
-        $filterClosure = function (Table $table) use ($config) {
-            if (!$config->hasTable($table->getName())) {
-                return true;
-            }
-
-            return !$config->getTable($table->getName())->isTableIgnored();
-        };
-
-        return array_filter($tables, $filterClosure);
     }
 }

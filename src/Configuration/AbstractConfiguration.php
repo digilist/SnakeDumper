@@ -62,7 +62,7 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
      */
     public function set($key, $value)
     {
-        $this->config[$key];
+        $this->config[$key] = $value;
         return $this;
     }
 

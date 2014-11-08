@@ -38,6 +38,15 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
     }
 
     /**
+     * @param array $list
+     * @return $this
+     */
+    public function setTableWhiteList(array $list)
+    {
+        return $this->set('table_white_list', $list);
+    }
+
+    /**
      * @param string $name
      *
      * @return bool
