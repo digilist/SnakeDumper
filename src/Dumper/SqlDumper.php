@@ -40,11 +40,13 @@ class SqlDumper extends AbstractDumper
         $platform = $conn->getDatabasePlatform();
         $platform->registerDoctrineTypeMapping('enum', 'string');
 
+        // Retrieve list of tables
         $tables = $this->getTables($conn, $platform);
-
         $tables = $this->filterWhiteListTables($config, $tables);
+        $tables = $this->filterIgnoredTables($config, $tables);
+
         $this->dumpPreamble($config, $conn->getDatabasePlatform(), $output);
-        $this->dumpTableStructure($config, $tables, $conn->getDatabasePlatform(), $output);
+        $this->dumpTableStructure($tables, $conn->getDatabasePlatform(), $output);
         $this->dumpTableContents($config, $tables, $conn, $output);
         $this->dumpConstraints($config, $tables, $conn->getDatabasePlatform(), $output);
     }
@@ -75,24 +77,15 @@ class SqlDumper extends AbstractDumper
     /**
      * Dumps the table structures.
      *
-     * @param DumperConfigurationInterface $config
-     * @param Table[]                      $tables
-     * @param AbstractPlatform             $platform
-     * @param OutputInterface              $output
+     * @param Table[] $tables
+     * @param AbstractPlatform $platform
+     * @param OutputInterface $output
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @internal param \Digilist\SnakeDumper\Configuration\DumperConfigurationInterface $config
      */
-    private function dumpTableStructure(
-        DumperConfigurationInterface $config,
-        array $tables,
-        AbstractPlatform $platform,
-        OutputInterface $output
-    ) {
+    private function dumpTableStructure(array $tables, AbstractPlatform $platform, OutputInterface $output)
+    {
         foreach ($tables as $table) {
-            if ($config->hasTable($table->getName()) && $config->getTable($table->getName())->isTableIgnored()) {
-                continue;
-            }
-
             $structure = $platform->getCreateTableSQL($table);
             $structure = $this->implodeQueries($structure);
 
@@ -119,8 +112,8 @@ class SqlDumper extends AbstractDumper
             $tableConfig = $config->getTable($table->getName());
 
             // check if table contents are ignored
-            if ($tableConfig != null) {
-                if ($tableConfig->isContentIgnored() || $tableConfig->isTableIgnored()) {
+            if (null !== $tableConfig) {
+                if ($tableConfig->isContentIgnored()) {
                     continue;
                 }
             }
@@ -373,6 +366,28 @@ class SqlDumper extends AbstractDumper
             }
 
             return false;
+        };
+
+        return array_filter($tables, $filterClosure);
+    }
+
+    /**
+     * @param DumperConfigurationInterface $config
+     * @param Table[] $tables
+     * @return Table[]
+     */
+    private function filterIgnoredTables(DumperConfigurationInterface $config, array $tables)
+    {
+        /**
+         * @param Table $table
+         * @return bool
+         */
+        $filterClosure = function (Table $table) use ($config) {
+            if (!$config->hasTable($table->getName())) {
+                return true;
+            }
+
+            return !$config->getTable($table->getName())->isTableIgnored();
         };
 
         return array_filter($tables, $filterClosure);
