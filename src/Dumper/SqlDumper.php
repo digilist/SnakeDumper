@@ -48,11 +48,6 @@ class SqlDumper extends AbstractDumper
         $tables = $filter->filterWhiteListTables($tables);
         $tables = $filter->filterIgnoredTables($tables);
 
-        foreach ($tables as $table) {
-            var_dump($table->getName());
-        }
-        exit;
-
         $this->dumpPreamble($config, $platform, $output);
         $this->dumpTableStructure($tables, $platform, $output);
         $this->dumpTableContents($config, $tables, $conn, $output);

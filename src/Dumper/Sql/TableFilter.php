@@ -5,10 +5,6 @@ namespace Digilist\SnakeDumper\Dumper\Sql;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Doctrine\DBAL\Schema\Table;
 
-/**
- * @package Digilist\SnakeDumper\Dumper\Sql
- * @author moellers
- */
 class TableFilter
 {
 
