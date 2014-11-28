@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c74762ea92b61b33ec88031832cf897c",
+    "hash": "da64e6ad84601d2977ed5ae2fe5e437f",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -291,24 +291,29 @@
         },
         {
             "name": "doctrine/dbal",
-            "version": "v2.5.0-RC2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/doctrine/dbal.git",
-                "reference": "f7dbc5dfdefa1a2b536ee4c0bc3e98dab37e8b53"
+                "url": "git@github.com:digilist/dbal",
+                "reference": "e8205399378a654ab9dcb5a9496fa2ff59bd4c60"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/f7dbc5dfdefa1a2b536ee4c0bc3e98dab37e8b53",
-                "reference": "f7dbc5dfdefa1a2b536ee4c0bc3e98dab37e8b53",
-                "shasum": ""
+            "archive": {
+                "exclude": [
+                    "!vendor",
+                    "tests",
+                    "*phpunit.xml",
+                    ".travis.yml",
+                    "build.xml",
+                    "build.properties",
+                    "composer.phar"
+                ]
             },
             "require": {
-                "doctrine/common": "2.4.*",
+                "doctrine/common": ">=2.4,<2.6-dev",
                 "php": ">=5.3.2"
             },
             "require-dev": {
-                "phpunit/phpunit": "4.0.*",
+                "phpunit/phpunit": "4.*",
                 "symfony/console": "2.*"
             },
             "suggest": {
@@ -328,11 +333,14 @@
                     "Doctrine\\DBAL\\": "lib/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "authors": [
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
+                },
                 {
                     "name": "Roman Borschel",
                     "email": "roman@code-factory.org"
@@ -340,10 +348,6 @@
                 {
                     "name": "Benjamin Eberlei",
                     "email": "kontakt@beberlei.de"
-                },
-                {
-                    "name": "Guilherme Blanco",
-                    "email": "guilhermeblanco@gmail.com"
                 },
                 {
                     "name": "Jonathan Wage",
@@ -358,7 +362,7 @@
                 "persistence",
                 "queryobject"
             ],
-            "time": "2014-09-11 21:07:20"
+            "time": "2014-11-28 19:02:39"
         },
         {
             "name": "doctrine/inflector",
@@ -1413,11 +1417,11 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "doctrine/dbal": 5
+        "doctrine/dbal": 20
     },
     "prefer-stable": false,
     "platform": {
-        "php": ">=5.5"
+        "php": ">=5.3"
     },
     "platform-dev": []
 }
