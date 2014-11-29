@@ -224,10 +224,14 @@ class SqlDumper extends AbstractDumper
         foreach ($sm->listTables() as $table) {
             $columns = array();
             foreach ($table->getColumns() as $column) {
+                $columnConfig = $column->toArray();
+                $columnConfig['platformOptions'] = $column->getPlatformOptions();
+                $columnConfig['customSchemaOptions'] = $column->getCustomSchemaOptions();
+
                 $columns[] = new Column(
                     $platform->quoteIdentifier($column->getName()),
                     $column->getType(),
-                    $column->toArray()
+                    $columnConfig
                 );
             }
 
