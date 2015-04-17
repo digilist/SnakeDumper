@@ -41,11 +41,16 @@ class DumpCommand extends Command
 
     private function parseConfig(InputInterface $input)
     {
-        $config = Yaml::parse(sprintf('%s/%s', getcwd(), $input->getOption('config')));
+        $configFile = realpath(sprintf('%s/%s', getcwd(), $input->getOption('config')));
+        if (!$configFile) {
+            throw new \InvalidArgumentException('Cannot find configuration file: ' . $input->getOption('config'));
+        }
+
+        $config = Yaml::parse($configFile);
 
         $processor = new Processor();
         $configuration = new SnakeConfigurationTree();
-        $processed = $processor->processConfiguration($configuration, [$config]);
+        $processed = $processor->processConfiguration($configuration, array($config));
 
         return new SnakeConfiguration($processed);
     }
