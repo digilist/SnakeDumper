@@ -61,7 +61,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                         ->scalarNode('query')->end()
                         ->scalarNode('orderBy')->end()
                         ->integerNode('limit')->end()
-                        ->variableNode('columns')->end()
+                        ->variableNode('converters')->end()
                     ->end()
                 ->end()
             ->end()

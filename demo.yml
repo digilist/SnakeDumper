@@ -24,7 +24,7 @@ tables:
     foo:
         orderBy: id ASC
         limit: 100
-        columns:
+        converters:
             name:
                 - JohnDoe
             street:
@@ -38,6 +38,6 @@ tables:
             SELECT *, bar.value1 AS xyz
             FROM foo_custom
             JOIN bar
-        columns:
+        converters:
             name:
                 - JohnDoe

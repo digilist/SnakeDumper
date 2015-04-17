@@ -22,6 +22,7 @@ class ColumnConfiguration extends AbstractConfiguration
     public function __construct($name, array $config)
     {
         $this->name = $name;
+
         parent::__construct($config);
     }
 
@@ -64,7 +65,7 @@ class ColumnConfiguration extends AbstractConfiguration
      */
     private function parseConverters()
     {
-        foreach ($this->toArray() as $converterDef) {
+        foreach ($this->get('converters') as $converterDef) {
 
             $parameter = null;
             if ($converterDef === null) {
