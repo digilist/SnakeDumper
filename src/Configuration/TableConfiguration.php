@@ -161,11 +161,38 @@ class TableConfiguration extends AbstractConfiguration
 
     protected function parseConfig(array $config)
     {
-        // currently columns only consist of converters, but there can be more later...
+        $columns = array();
+
         foreach ($this->get('converters', array()) as $columnName => $converters) {
-            $this->columns[$columnName] = new ColumnConfiguration($columnName, array(
-                'converters' => $converters
-            ));
+            $columns[$columnName] = $this->createInitialColumnArray();
+            $columns[$columnName]['converters'] = $converters;
         }
+
+        foreach ($this->get('filters', array()) as $filter) {
+            $columnName = $filter[0];
+            $operator = $filter[1];
+            $value = $filter[2];
+
+            if (!array_key_exists($columnName, $columns)) {
+                $columns[$columnName] = $this->createInitialColumnArray();
+            }
+
+            $columns[$columnName]['filters'][] = array(
+                'operator' => $operator,
+                'value' => $value,
+            );
+        }
+
+        foreach ($columns as $columnName => $config) {
+            $this->columns[$columnName] = new ColumnConfiguration($columnName, $config);
+        }
+    }
+
+    private function createInitialColumnArray()
+    {
+        return array(
+            'converters' => array(),
+            'filters' => array(),
+        );
     }
 }

@@ -86,5 +86,12 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
         }
     }
 
-    abstract protected function parseConfig(array $config);
+    /**
+     * Override to allow additional config parsing.
+     *
+     * @param array $config
+     */
+    protected function parseConfig(array $config)
+    {
+    }
 }

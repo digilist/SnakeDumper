@@ -33,6 +33,8 @@ tables:
                 - Conditional:
                     condition: "$website != ''"
                     if_true: 'http://www.google.de'
+        filters:
+            - ['name', LIKE, 'Markus %'] # only select rows which column "name" starts with Markus
     foo_custom:
         query: >
             SELECT *, bar.value1 AS xyz

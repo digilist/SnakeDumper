@@ -13,7 +13,12 @@ class ColumnConfiguration extends AbstractConfiguration
     /**
      * @var ConverterConfiguration[]
      */
-    private $converters;
+    private $converters = array();
+
+    /**
+     * @var ConverterConfiguration[]
+     */
+    private $filters = array();
 
     /**
      * @param string $name
@@ -53,11 +58,27 @@ class ColumnConfiguration extends AbstractConfiguration
     }
 
     /**
+     * @return FilterConfiguration[]
+     */
+    public function getFilters()
+    {
+        return $this->filters;
+    }
+
+    /**
      * @param array $config
      */
     protected function parseConfig(array $config)
     {
+        $this->parseFilters();
         $this->parseConverters();
+    }
+
+    private function parseFilters()
+    {
+        foreach ($this->get('filters') as $filterDef) {
+            $this->filters[] = new FilterConfiguration($filterDef);
+        }
     }
 
     /**
@@ -66,7 +87,6 @@ class ColumnConfiguration extends AbstractConfiguration
     private function parseConverters()
     {
         foreach ($this->get('converters') as $converterDef) {
-
             $parameter = null;
             if ($converterDef === null) {
                 $className = 'Null';

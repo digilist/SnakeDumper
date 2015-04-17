@@ -10,6 +10,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Index;
@@ -121,7 +122,7 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
-     * Dumps the contents of a single table.
+     * Dumps the contents of a single table. The TableConfig is optional as tables do not need to be configured.
      *
      * @param TableConfiguration $tableConfig
      * @param Table              $table
@@ -306,6 +307,8 @@ class SqlDumper extends AbstractDumper
             ->from($table->getName(), 't');
 
         if ($tableConfig != null) {
+            $this->addFiltersToSelectQuery($qb, $tableConfig);
+
             if ($tableConfig->getLimit() != null) {
                 $qb->setMaxResults($tableConfig->getLimit());
             }
@@ -317,5 +320,23 @@ class SqlDumper extends AbstractDumper
         $result = $qb->execute();
 
         return $result;
+    }
+
+    /**
+     * Add the configured filter to the select query.
+     *
+     * @param QueryBuilder $qb
+     * @param TableConfiguration $tableConfig
+     */
+    private function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig)
+    {
+        foreach ($tableConfig->getColumns() as $column) {
+            $filters = $column->getFilters();
+
+            foreach ($filters as $index => $filter) {
+                $qb->andWhere($qb->expr()->comparison($column->getName(), $filter->getOperator(), ':param_' . $index))
+                    ->setParameter('param_' . $index, $filter->getValue());
+            }
+        }
     }
 }
