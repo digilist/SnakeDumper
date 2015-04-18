@@ -2,6 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
+use Digilist\SnakeDumper\Configuration\Table\DataDependentFilterConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 
 class DumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
@@ -93,7 +94,7 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
     /**
      * @return string
      */
-    public function getFullQualifiedDumper()
+    public function getFullQualifiedDumperClassName()
     {
         return 'Digilist\\SnakeDumper\\Dumper\\' . $this->getDumper() . 'Dumper';
     }
@@ -112,8 +113,25 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
         $this->outputConfiguration = new OutputConfiguration($this->get('output', null));
 
         // parse tables
-        foreach ($this->get('tables', array()) as $name => $table) {
-            $this->tableConfigurations[$name] = new TableConfiguration($name, $table);
+        foreach ($this->get('tables', array()) as $name => $tableConfig) {
+            $this->tableConfigurations[$name] = new TableConfiguration($name, $tableConfig);
+        }
+
+        // parse dependent columns
+        foreach ($this->tableConfigurations as $table) {
+            foreach ($table->getDependencies() as $dependency) {
+                if (!array_key_exists($dependency, $this->tableConfigurations)) {
+                    $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
+                }
+
+                foreach ($table->getColumns() as $config) {
+                    foreach ($config->getFilters() as $filter) {
+                        if ($filter instanceof DataDependentFilterConfiguration) {
+                            $this->tableConfigurations[$dependency]->addCollectColumns($filter->getColumn());
+                        }
+                    }
+                }
+            }
         }
     }
 }

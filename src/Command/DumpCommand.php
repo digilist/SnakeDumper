@@ -32,7 +32,7 @@ class DumpCommand extends Command
         $config = $this->parseConfig($input);
 
         /** @var DumperInterface $dumper */
-        $class = $config->getFullQualifiedDumper();
+        $class = $config->getFullQualifiedDumperClassName();
         $dumper = new $class();
 
         $dumper->setConverterService(SqlConverterService::createFromConfig($config));

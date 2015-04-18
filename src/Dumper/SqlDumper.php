@@ -2,7 +2,10 @@
 
 namespace Digilist\SnakeDumper\Dumper;
 
+use Digilist\DependencyGraph\DependencyGraph;
+use Digilist\DependencyGraph\DependencyNode;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
+use Digilist\SnakeDumper\Configuration\Table\DataDependentFilterConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Doctrine\DBAL\Configuration;
@@ -20,6 +23,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class SqlDumper extends AbstractDumper
 {
+
+    /**
+     * @var array
+     */
+    private $collectedValues;
 
     /**
      * {@inheritdoc}
@@ -42,8 +50,10 @@ class SqlDumper extends AbstractDumper
         $platform = $conn->getDatabasePlatform();
         $platform->registerDoctrineTypeMapping('enum', 'string');
 
+        $this->collectedValues = array();
+
         // Retrieve list of tables
-        $tables = $this->getTables($conn, $platform);
+        $tables = $this->getTables($config, $conn, $platform);
 
         $filter = new TableFilter($config);
         $tables = $filter->filterWhiteListTables($tables);
@@ -73,7 +83,10 @@ class SqlDumper extends AbstractDumper
 
         if ($platform instanceof MySqlPlatform) {
             $output->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
+            $output->writeln('SET FOREIGN_KEY_CHECKS=0');
         }
+
+        $output->writeln('');
 
         // TODO support other platforms
     }
@@ -138,8 +151,18 @@ class SqlDumper extends AbstractDumper
         $platform = $conn->getDatabasePlatform();
         $pdo = $conn->getWrappedConnection();
 
-        $tableName = $table->getQuotedName($platform);
+        $tableName = $table->getName();
+        $quotedTableName = $table->getQuotedName($platform);
         $insertColumns = null;
+
+        $this->collectedValues[$tableName] = array();
+        $collectColumns = array();
+        if ($tableConfig !== null) {
+            $collectColumns = $tableConfig->getCollectColumns();
+            foreach ($collectColumns as $collectColumn) {
+                $this->collectedValues[$tableName][$collectColumn] = array();
+            }
+        }
 
         $result = $this->executeSelectQuery($tableConfig, $table, $conn);
         foreach ($result as $row) {
@@ -157,10 +180,16 @@ class SqlDumper extends AbstractDumper
             }
 
             if ($insertColumns === null) {
+                // the insert Columns depend on the result set
+                // as custom queries are possible it can't be predefined
                 $insertColumns = $this->extractInsertColumns($platform, array_keys($row));
             }
 
-            $query = 'INSERT INTO ' . $tableName . ' (' . $insertColumns . ')' .
+            foreach ($collectColumns as $collectColumn) {
+                $this->collectedValues[$tableName][$collectColumn][] = $row[$collectColumn];
+            }
+
+            $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                 ' VALUES (' . implode(', ', $row) . ');';
 
             $output->writeln($query);
@@ -191,7 +220,8 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
-     * Get a SQL-formatted string to
+     * Get a SQL-formatted string of the column order to be used in the INSERT statement.
+     * (INSERT INTO foo (--> column1, column2, column3, ... <--)
      *
      * @param AbstractPlatform $platform
      * @param array            $columns
@@ -208,19 +238,20 @@ class SqlDumper extends AbstractDumper
     }
 
     /**
-     * Returns an array with all available tables.
+     * Returns an array with all available tables, pre-sorted to handle all dependencies.
      *
      * As Doctrine DBAL doesn't quote the names of tables, columns and indexes, this function does the job.
      *
-     * @param Connection       $conn
+     * @param DumperConfigurationInterface $config
+     * @param Connection $conn
      * @param AbstractPlatform $platform
-     *
-     * @return Table[]
+     * @return \Doctrine\DBAL\Schema\Table[]
      */
-    private function getTables(Connection $conn, AbstractPlatform $platform)
+    private function getTables(DumperConfigurationInterface $config, Connection $conn, AbstractPlatform $platform)
     {
         $sm = $conn->getSchemaManager();
 
+        /** @var Table[] $tables */
         $tables = array();
         foreach ($sm->listTables() as $table) {
             $columns = array();
@@ -268,6 +299,34 @@ class SqlDumper extends AbstractDumper
                 array()
             );
         }
+
+        // Sort tables so that all dependencies can be fulfilled.
+        /** @var DependencyNode[] $dependencyNodes */
+        $dependencyNodes = array();
+        $dependencyGraph = new DependencyGraph();
+
+        foreach ($tables as $table) {
+            if (!isset($dependencyNodes[$table->getName()])) {
+                $dependencyNodes[$table->getName()] = new DependencyNode();
+            }
+
+            $dependencyNodes[$table->getName()]->setElement($table);
+            $dependencyGraph->addNode($dependencyNodes[$table->getName()]);
+
+            // find and add dependencies
+            $tableConfig = $config->getTable($table->getName());
+            if ($tableConfig !== null) {
+                foreach ($tableConfig->getDependencies() as $dependency) {
+                    if (!isset($dependencyNodes[$dependency])) {
+                        $dependencyNodes[$dependency] = new DependencyNode(null);
+                    }
+
+                    $dependencyGraph->addDependency($dependencyNodes[$table->getName()], $dependencyNodes[$dependency]);
+                }
+            }
+        }
+
+        $tables = array_filter($dependencyGraph->resolve());
 
         return $tables;
     }
@@ -334,6 +393,29 @@ class SqlDumper extends AbstractDumper
             $filters = $column->getFilters();
 
             foreach ($filters as $index => $filter) {
+                if ($filter instanceof DataDependentFilterConfiguration) {
+                    if (!isset($this->collectedValues[$filter->getTable()])) {
+                        throw new \InvalidArgumentException(
+                            sprintf(
+                                'The table %s has not been dumped before %s',
+                                $filter->getTable(),
+                                $tableConfig->getName()
+                            )
+                        );
+                    }
+                    if (!isset($this->collectedValues[$filter->getTable()][$filter->getColumn()])) {
+                        throw new \InvalidArgumentException(
+                            sprintf(
+                                'The column %s on table %s has not been dumped.',
+                                $filter->getTable(),
+                                $tableConfig->getName()
+                            )
+                        );
+                    }
+
+                    $filter->setValue($this->collectedValues[$filter->getTable()][$filter->getColumn()]);
+                }
+
                 if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
                     // the in and notIn operator expects an array which needs different handling
 

@@ -46,4 +46,4 @@ tables:
                 - JohnDoe
     foo_depends:
         filters:
-            - [foo_id, in, @foo.id]
+            - [foo_id, depends, foo.id]

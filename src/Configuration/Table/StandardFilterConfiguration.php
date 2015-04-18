@@ -4,7 +4,7 @@ namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 
-class FilterConfiguration extends AbstractConfiguration
+class StandardFilterConfiguration extends AbstractConfiguration
 {
 
     /**
@@ -12,6 +12,10 @@ class FilterConfiguration extends AbstractConfiguration
      *
      * The operator is passed to the ExpressionBuilder of Doctrine,
      * therefore only the following are valid at the moment.
+     *
+     * The depends operator defines that the column's value must be one of a preselected value of another table.
+     * For example: You dump all Customers and their billings, but only the last 100 Customers. Then you don't want to
+     * dump all billings, so you define a filter "Billing.customer_id depends Customer.id"
      *
      * @var array
      */
@@ -57,7 +61,7 @@ class FilterConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param string $value
+     * @param mixed $value
      *
      * @return string
      */
@@ -72,5 +76,4 @@ class FilterConfiguration extends AbstractConfiguration
             throw new \InvalidArgumentException('Invalid filter operator: ' . $this->getOperator());
         }
     }
-
 }

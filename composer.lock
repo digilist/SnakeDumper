@@ -4,8 +4,47 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "da64e6ad84601d2977ed5ae2fe5e437f",
+    "hash": "14cba273bf2e9aca5960a01c8be333e7",
     "packages": [
+        {
+            "name": "digilist/dependency-graph",
+            "version": "v0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/digilist/dependency-graph.git",
+                "reference": "e4273cee201e7239b24fa94e00b95975319fd539"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/digilist/dependency-graph/zipball/e4273cee201e7239b24fa94e00b95975319fd539",
+                "reference": "e4273cee201e7239b24fa94e00b95975319fd539",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.5.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Digilist\\DependencyGraph\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Markus Fasselt",
+                    "email": "markus.fasselt@gmail.com"
+                }
+            ],
+            "description": "Dependency Graph Resolver in PHP",
+            "time": "2015-04-18 20:46:22"
+        },
         {
             "name": "doctrine/annotations",
             "version": "v1.2.1",
@@ -1420,6 +1459,7 @@
         "doctrine/dbal": 20
     },
     "prefer-stable": false,
+    "prefer-lowest": false,
     "platform": {
         "php": ">=5.3"
     },

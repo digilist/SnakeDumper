@@ -4,7 +4,7 @@ namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\ConverterConfiguration;
-use Digilist\SnakeDumper\Configuration\Table\FilterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\StandardFilterConfiguration;
 
 class ColumnConfiguration extends AbstractConfiguration
 {
@@ -62,7 +62,7 @@ class ColumnConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return FilterConfiguration[]
+     * @return StandardFilterConfiguration[]
      */
     public function getFilters()
     {
@@ -78,10 +78,17 @@ class ColumnConfiguration extends AbstractConfiguration
         $this->parseConverters();
     }
 
+    /**
+     *
+     */
     private function parseFilters()
     {
         foreach ($this->get('filters') as $filterDef) {
-            $this->filters[] = new FilterConfiguration($filterDef);
+            if ($filterDef['operator'] == 'depends') {
+                $this->filters[] = new DataDependentFilterConfiguration($filterDef);
+            } else {
+                $this->filters[] = new StandardFilterConfiguration($filterDef);
+            }
         }
     }
 

@@ -19,6 +19,20 @@ class TableConfiguration extends AbstractConfiguration
     private $columns = array();
 
     /**
+     * Contains the names of all dependent tables
+     *
+     * @var array
+     */
+    private $dependencies = array();
+
+    /**
+     * Contains the names of all columns which values should be collected for later reuse.
+     *
+     * @var array
+     */
+    private $collectColumns = array();
+
+    /**
      * @param string $name
      * @param array $config
      */
@@ -164,6 +178,78 @@ class TableConfiguration extends AbstractConfiguration
         return $this->columns[$name];
     }
 
+    /**
+     * @return array
+     */
+    public function getDependencies()
+    {
+        return $this->dependencies;
+    }
+
+    /**
+     * @return array
+     */
+    public function hasDependencies()
+    {
+        return count($this->dependencies) > 0;
+    }
+
+    /**
+     * @param array $dependencies
+     *
+     * @return $this
+     */
+    public function setDependencies(array $dependencies)
+    {
+        $this->dependencies = $dependencies;
+
+        return $this;
+    }
+
+    /**
+     * @param string $dependency
+     *
+     * @return $this
+     */
+    public function addDependencies($dependency)
+    {
+        $this->dependencies[] = $dependency;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCollectColumns()
+    {
+        return $this->collectColumns;
+    }
+
+    /**
+     * @param array $collectColumns
+     *
+     * @return $this
+     */
+    public function setCollectColumns($collectColumns)
+    {
+        $this->collectColumns = $collectColumns;
+
+        return $this;
+    }
+
+    /**
+     * @param array $collectColumn
+     *
+     * @return $this
+     */
+    public function addCollectColumns($collectColumn)
+    {
+        $this->collectColumns[] = $collectColumn;
+
+        return $this;
+    }
+
     protected function parseConfig(array $config)
     {
         $columns = array();
@@ -182,10 +268,29 @@ class TableConfiguration extends AbstractConfiguration
                 $columns[$columnName] = $this->createInitialColumnArray();
             }
 
-            $columns[$columnName]['filters'][] = array(
-                'operator' => $operator,
-                'value' => $value,
-            );
+            if ($operator == 'depends') {
+                $referencedColumn = explode('.', $value);
+                if (count($referencedColumn) !== 2) {
+                    throw new \InvalidArgumentException(
+                        'Unexpected format for depends operator "' . $value . '". Expected format "table.column"'
+                    );
+                }
+
+                $table = $referencedColumn[0];
+                $column = $referencedColumn[1];
+
+                $this->dependencies[] = $table;
+                $columns[$columnName]['filters'][] = array(
+                    'operator' => 'depends',
+                    'table' => $table,
+                    'column' => $column,
+                );
+            } else {
+                $columns[$columnName]['filters'][] = array(
+                    'operator' => $operator,
+                    'value' => $value,
+                );
+            }
         }
 
         foreach ($columns as $columnName => $config) {
