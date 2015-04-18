@@ -4,9 +4,12 @@ namespace Digilist\SnakeDumper\Configuration;
 
 use Digilist\SnakeDumper\Exception\ConfigurationException;
 
-abstract class AbstractConfiguration implements ConfigurationInterface, CommonConfigurationInterface
+abstract class AbstractConfiguration
 {
 
+    /**
+     * @var array
+     */
     private $config;
 
     /**
@@ -63,6 +66,7 @@ abstract class AbstractConfiguration implements ConfigurationInterface, CommonCo
     public function set($key, $value)
     {
         $this->config[$key] = $value;
+
         return $this;
     }
 

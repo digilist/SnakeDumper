@@ -1,6 +1,10 @@
 <?php
 
-namespace Digilist\SnakeDumper\Configuration;
+namespace Digilist\SnakeDumper\Configuration\Table;
+
+use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\ConverterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\FilterConfiguration;
 
 class ColumnConfiguration extends AbstractConfiguration
 {

@@ -3,7 +3,7 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\TableConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;

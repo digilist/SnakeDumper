@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter\Service;
 
-use Digilist\SnakeDumper\Configuration\ConverterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\ConverterConfiguration;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Converter\ConverterInterface;

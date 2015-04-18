@@ -3,7 +3,7 @@
 namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\SnakeConfiguration;
+use Digilist\SnakeDumper\Configuration\DumperConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
 use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
@@ -52,7 +52,7 @@ class DumpCommand extends Command
         $configuration = new SnakeConfigurationTree();
         $processed = $processor->processConfiguration($configuration, array($config));
 
-        return new SnakeConfiguration($processed);
+        return new DumperConfiguration($processed);
     }
 
     /**

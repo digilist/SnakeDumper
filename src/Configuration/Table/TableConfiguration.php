@@ -1,6 +1,9 @@
 <?php
 
-namespace Digilist\SnakeDumper\Configuration;
+namespace Digilist\SnakeDumper\Configuration\Table;
+
+use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\ColumnConfiguration;
 
 class TableConfiguration extends AbstractConfiguration
 {
@@ -22,6 +25,7 @@ class TableConfiguration extends AbstractConfiguration
     public function __construct($name, array $config)
     {
         $this->name = $name;
+
         parent::__construct($config);
     }
 
@@ -40,6 +44,7 @@ class TableConfiguration extends AbstractConfiguration
     public function setName($value)
     {
         $this->name = $value;
+
         return $this;
     }
 

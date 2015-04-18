@@ -2,23 +2,32 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-class SnakeConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
+use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+
+class DumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
 {
 
-    private $database;
-    private $output;
+    /**
+     * @var DatabaseConfiguration
+     */
+    private $databaseConfiguration;
+
+    /**
+     * @var OutputConfiguration
+     */
+    private $outputConfiguration;
 
     /**
      * @var TableConfiguration[]
      */
-    private $tables = array();
+    private $tableConfigurations = array();
 
     /**
      * @return DatabaseConfiguration
      */
     public function getDatabase()
     {
-        return $this->database;
+        return $this->databaseConfiguration;
     }
 
     /**
@@ -26,7 +35,7 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function getTables()
     {
-        return $this->tables;
+        return $this->tableConfigurations;
     }
 
     /**
@@ -53,7 +62,7 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function hasTable($name)
     {
-        return array_key_exists($name, $this->tables);
+        return array_key_exists($name, $this->tableConfigurations);
     }
 
     /**
@@ -66,11 +75,11 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function getTable($name)
     {
-        if (!array_key_exists($name, $this->tables)) {
+        if (!array_key_exists($name, $this->tableConfigurations)) {
             return null;
         }
 
-        return $this->tables[$name];
+        return $this->tableConfigurations[$name];
     }
 
     /**
@@ -94,17 +103,17 @@ class SnakeConfiguration extends AbstractConfiguration implements DumperConfigur
      */
     public function getOutput()
     {
-        return $this->output;
+        return $this->outputConfiguration;
     }
 
     protected function parseConfig(array $config)
     {
-        $this->database = new DatabaseConfiguration($this->get('database', null));
-        $this->output = new OutputConfiguration($this->get('output', null));
+        $this->databaseConfiguration = new DatabaseConfiguration($this->get('database', null));
+        $this->outputConfiguration = new OutputConfiguration($this->get('output', null));
 
         // parse tables
         foreach ($this->get('tables', array()) as $name => $table) {
-            $this->tables[$name] = new TableConfiguration($name, $table);
+            $this->tableConfigurations[$name] = new TableConfiguration($name, $table);
         }
     }
 }

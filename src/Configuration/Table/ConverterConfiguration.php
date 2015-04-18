@@ -1,6 +1,6 @@
 <?php
 
-namespace Digilist\SnakeDumper\Configuration;
+namespace Digilist\SnakeDumper\Configuration\Table;
 
 class ConverterConfiguration
 {

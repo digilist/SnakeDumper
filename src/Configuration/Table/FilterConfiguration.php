@@ -1,6 +1,8 @@
 <?php
 
-namespace Digilist\SnakeDumper\Configuration;
+namespace Digilist\SnakeDumper\Configuration\Table;
+
+use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 
 class FilterConfiguration extends AbstractConfiguration
 {

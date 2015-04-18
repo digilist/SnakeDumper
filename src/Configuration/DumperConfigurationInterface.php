@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
+use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+
 interface DumperConfigurationInterface
 {
 
