@@ -334,8 +334,27 @@ class SqlDumper extends AbstractDumper
             $filters = $column->getFilters();
 
             foreach ($filters as $index => $filter) {
-                $qb->andWhere($qb->expr()->comparison($column->getName(), $filter->getOperator(), ':param_' . $index))
-                    ->setParameter('param_' . $index, $filter->getValue());
+                if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
+                    // the in and notIn operator expects an array which needs different handling
+
+                    $param = array();
+                    foreach ((array) $filter->getValue() as $valueIndex => $value) {
+                        $tmpParam = 'param_' . $index . '_' . $valueIndex;
+                        $param[] = ':' . $tmpParam;
+
+                        $qb->setParameter($tmpParam, $value);
+                    }
+                } else {
+                    $param = ':param_' . $index;
+
+                    $qb->setParameter('param_' . $index, $filter->getValue());
+                }
+
+                $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
+                    $column->getName(),
+                    $param
+                ));
+                $qb->andWhere($expr);
             }
         }
     }

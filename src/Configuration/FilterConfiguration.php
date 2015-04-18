@@ -6,6 +6,29 @@ class FilterConfiguration extends AbstractConfiguration
 {
 
     /**
+     * Array which contains all valid operators.
+     *
+     * The operator is passed to the ExpressionBuilder of Doctrine,
+     * therefore only the following are valid at the moment.
+     *
+     * @var array
+     */
+    private static $validOperators = array(
+        'eq',
+        'neq',
+        'lt',
+        'lte',
+        'gt',
+        'gte',
+        'isNull',
+        'isNotNull',
+        'like',
+        'notLike',
+        'in',
+        'notIn',
+    );
+
+    /**
      * @return string
      */
     public function getOperator()
@@ -40,4 +63,12 @@ class FilterConfiguration extends AbstractConfiguration
     {
         return $this->set('value', $value);
     }
+
+    protected function parseConfig(array $config)
+    {
+        if (!in_array($this->getOperator(), self::$validOperators)) {
+            throw new \InvalidArgumentException('Invalid filter operator: ' . $this->getOperator());
+        }
+    }
+
 }
