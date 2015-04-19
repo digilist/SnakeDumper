@@ -91,7 +91,7 @@ abstract class AbstractConfiguration
     }
 
     /**
-     * Override to allow additional config parsing.
+     * Override to allow additional config parsing if the config is initialized via an array.
      *
      * @param array $config
      */

@@ -67,8 +67,8 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
     }
 
     /**
-     * Returns the table for configuration of the table with the passed name. If there is no configuration,
-     * null will be returned.
+     * Returns the table for configuration of the table with the passed name.
+     * If there is no configuration, null will be returned.
      *
      * @param string $name
      *
@@ -81,6 +81,19 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
         }
 
         return $this->tableConfigurations[$name];
+    }
+
+    /**
+     * Returns the table for configuration of the table with the passed name.
+     * If there is no configuration, null will be returned.
+     *
+     * @param TableConfiguration $table
+     *
+     * @return TableConfiguration
+     */
+    public function addTable(TableConfiguration $table)
+    {
+        return $this->tableConfigurations[$table->getName()] = $table;
     }
 
     /**
@@ -109,8 +122,8 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
 
     protected function parseConfig(array $config)
     {
-        $this->databaseConfiguration = new DatabaseConfiguration($this->get('database', null));
-        $this->outputConfiguration = new OutputConfiguration($this->get('output', null));
+        $this->databaseConfiguration = new DatabaseConfiguration($this->get('database', array()));
+        $this->outputConfiguration = new OutputConfiguration($this->get('output', array()));
 
         // parse tables
         foreach ($this->get('tables', array()) as $name => $tableConfig) {

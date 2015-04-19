@@ -28,7 +28,7 @@ class ColumnConfiguration extends AbstractConfiguration
      * @param string $name
      * @param array $config
      */
-    public function __construct($name, array $config)
+    public function __construct($name, array $config = array())
     {
         $this->name = $name;
 

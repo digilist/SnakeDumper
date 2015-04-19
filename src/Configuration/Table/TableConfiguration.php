@@ -36,7 +36,7 @@ class TableConfiguration extends AbstractConfiguration
      * @param string $name
      * @param array $config
      */
-    public function __construct($name, array $config)
+    public function __construct($name, array $config = array())
     {
         $this->name = $name;
 
@@ -71,12 +71,12 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param bool $value
+     * @param bool $ignore
      * @return $this
      */
-    public function setIgnoreTable($value)
+    public function setIgnoreTable($ignore = true)
     {
-        return $this->set('ignore_table', (bool) $value);
+        return $this->set('ignore_table', (bool) $ignore);
     }
 
     /**
@@ -88,12 +88,12 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param bool $value
+     * @param bool $ignore
      * @return $this
      */
-    public function setIgnoreContent($value)
+    public function setIgnoreContent($ignore = true)
     {
-        return $this->set('ignore_content', boolval($value));
+        return $this->set('ignore_content', (bool) $ignore);
     }
 
     /**
@@ -211,7 +211,7 @@ class TableConfiguration extends AbstractConfiguration
      *
      * @return $this
      */
-    public function addDependencies($dependency)
+    public function addDependency($dependency)
     {
         $this->dependencies[] = $dependency;
 

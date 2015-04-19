@@ -1,0 +1,69 @@
+<?php
+
+namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
+
+use Digilist\SnakeDumper\Configuration\DumperConfiguration;
+use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
+use Digilist\SnakeDumper\Dumper\SqlDumper;
+use Symfony\Component\Console\Output\Output;
+
+class SqlDumperTest extends AbstractSqlTest
+{
+
+    public function testDumper()
+    {
+        $this->createTestSchema(true);
+
+        $output = new TestOutput();
+        $config = new DumperConfiguration(array(
+            'tables' => array(
+                'Billing' => array(
+                    'filters' => array(
+                        array(
+                            'customer_id',
+                            'depends',
+                            'Customer.id',
+                        )
+                    ),
+                ),
+                'Customer' => array(
+                    'limit' => 1,
+                    'converters' => array(
+                        'name' => array(
+                            array('String' => 'Foobar'),
+                        )
+                    ),
+                ),
+                'RandomTable' => array(
+                    'ignore_content' => true
+                ),
+                'RandomTable2' => array(
+                    'ignore_table' => true
+                ),
+            ),
+        ));
+
+        $dumper = new SqlDumper();
+        $dumper->setConverterService(SqlConverterService::createFromConfig($config));
+        $dumper->dump($config, $output, $this->connection);
+
+        $dump = $output->output;
+        $this->assertEquals(file_get_contents(__DIR__ . '/test_dump.sql'), $dump);
+    }
+}
+
+class TestOutput extends Output
+{
+
+    public $output = '';
+
+    public function clear()
+    {
+        $this->output = '';
+    }
+
+    protected function doWrite($message, $newline)
+    {
+        $this->output .= $message . ($newline ? "\n" : '');
+    }
+}

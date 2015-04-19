@@ -39,7 +39,7 @@ class TableFilter
      */
     public function filterIgnoredTables(array $tables)
     {
-        return array_filter($tables, array($this, 'isTableIgnored'));
+        return array_filter($tables, array($this, 'isTableNotIgnored'));
     }
 
     /**
@@ -70,7 +70,7 @@ class TableFilter
      * @param Table $table
      * @return bool
      */
-    public function isTableIgnored(Table $table) {
+    public function isTableNotIgnored(Table $table) {
         if (!$this->config->hasTable($table->getName())) {
             return true;
         }
