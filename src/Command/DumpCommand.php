@@ -10,6 +10,7 @@ use Digilist\SnakeDumper\Dumper\DumperInterface;
 use Digilist\SnakeDumper\Output\GzipStreamOutput;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\Output;
@@ -23,7 +24,7 @@ class DumpCommand extends Command
     {
         $this
             ->setName('dump')
-            ->addOption('config', null, InputOption::VALUE_REQUIRED)
+            ->addArgument('config', InputArgument::REQUIRED, 'The path to your config file.');
         ;
     }
 
@@ -41,9 +42,9 @@ class DumpCommand extends Command
 
     private function parseConfig(InputInterface $input)
     {
-        $configFile = realpath(sprintf('%s/%s', getcwd(), $input->getOption('config')));
+        $configFile = realpath(sprintf('%s/%s', getcwd(), $input->getArgument('config')));
         if (!$configFile) {
-            throw new \InvalidArgumentException('Cannot find configuration file: ' . $input->getOption('config'));
+            throw new \InvalidArgumentException('Cannot find configuration file: ' . $input->getArgument('config'));
         }
 
         $config = Yaml::parse($configFile);
