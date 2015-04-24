@@ -42,9 +42,15 @@ class DumpCommand extends Command
 
     private function parseConfig(InputInterface $input)
     {
-        $configFile = realpath(sprintf('%s/%s', getcwd(), $input->getArgument('config')));
+        $configArg = $input->getArgument('config');
+        if (strpos($configArg, '/') === 0) {
+            $configFile = realpath($configArg);
+        } else {
+            $configFile = realpath(sprintf('%s/%s', getcwd(), $configArg));
+        }
+
         if (!$configFile) {
-            throw new \InvalidArgumentException('Cannot find configuration file: ' . $input->getArgument('config'));
+            throw new \InvalidArgumentException('Cannot find configuration file: ' . $configArg);
         }
 
         $config = Yaml::parse($configFile);
