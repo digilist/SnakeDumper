@@ -70,9 +70,13 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         $pdo->query('INSERT INTO Customer VALUES (1, "Markus")');
         $pdo->query('INSERT INTO Customer VALUES (2, "Konstantin")');
         $pdo->query('INSERT INTO Customer VALUES (3, "John")');
+        $pdo->query('INSERT INTO Customer VALUES (4, "Konrad")');
+        $pdo->query('INSERT INTO Customer VALUES (5, "Mark")');
         $pdo->query('INSERT INTO Billing VALUES (1, 1, "IT", 42)');
         $pdo->query('INSERT INTO Billing VALUES (2, 1, NULL, 1337)');
         $pdo->query('INSERT INTO Billing VALUES (3, 2, "Some stuff", 1337)');
+        $pdo->query('INSERT INTO Billing VALUES (4, 5, "Another stuff", 1337)');
+        $pdo->query('INSERT INTO Billing VALUES (5, 5, "LOLj stuff", 1337)');
 
         if ($randomTables) {
             $pdo->query('INSERT INTO RandomTable VALUES (1, "Foo")');

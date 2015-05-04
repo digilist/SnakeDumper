@@ -1,5 +1,6 @@
 dumper: Sql
 output:
+    rowsPerStatement: 100
     file: php://stdout
     gzip: false
 database:

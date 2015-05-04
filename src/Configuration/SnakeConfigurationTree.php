@@ -26,6 +26,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
         $rootChildrenNode
             ->arrayNode('output')
                 ->children()
+                    ->scalarNode('rowsPerStatement')->end()
                     ->scalarNode('file')->defaultValue('php://stdout')->end()
                     ->booleanNode('gzip')->defaultFalse()->end()
                 ->end()

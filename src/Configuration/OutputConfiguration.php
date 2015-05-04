@@ -39,6 +39,23 @@ class OutputConfiguration extends AbstractConfiguration
         $this->set('gzip', $gzip);
     }
 
+    /**
+     * @return bool
+     */
+    public function getRowsPerStatement()
+    {
+        return $this->get('rowsPerStatement', 100);
+    }
+
+    /**
+     * @param bool $rowsPerStatement
+     * @return $this
+     */
+    public function setRowsPerStatement($rowsPerStatement)
+    {
+        $this->set('rowsPerStatement', $rowsPerStatement);
+    }
+
     protected function parseConfig(array $config)
     {
     }

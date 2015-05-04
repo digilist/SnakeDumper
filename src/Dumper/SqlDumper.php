@@ -67,7 +67,7 @@ class SqlDumper extends AbstractDumper
 
         $this->dumpPreamble($config, $platform, $output);
         $this->dumpTableStructure($tables, $platform, $output);
-        $this->dumpTableContents($config, $tables, $connection, $output);
+        $this->dumpTableContents($config, $tables, $connection, $output, $config->getOutput()->getRowsPerStatement());
         $this->dumpConstraints($tables, $platform, $output);
     }
 
@@ -117,12 +117,14 @@ class SqlDumper extends AbstractDumper
      * @param Table[]                      $tables
      * @param Connection                   $connection
      * @param OutputInterface              $output
+     * @param int                          $rowsPerStatement
      */
     private function dumpTableContents(
         DumperConfigurationInterface $config,
         array $tables,
         Connection $connection,
-        OutputInterface $output
+        OutputInterface $output,
+        $rowsPerStatement
     ) {
         $connection->setFetchMode(PDO::FETCH_ASSOC);
         $connection->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
@@ -135,7 +137,7 @@ class SqlDumper extends AbstractDumper
                 continue;
             }
 
-            $this->dumpTableContent($tableConfig, $table, $connection, $output);
+            $this->dumpTableContent($tableConfig, $table, $connection, $output, $rowsPerStatement);
         }
     }
 
@@ -146,12 +148,14 @@ class SqlDumper extends AbstractDumper
      * @param Table              $table
      * @param Connection         $connection
      * @param OutputInterface    $output
+     * @param int                $bufferSize
      */
     private function dumpTableContent(
         TableConfiguration $tableConfig = null,
         Table $table,
         Connection $connection,
-        OutputInterface $output
+        OutputInterface $output,
+        $bufferSize
     ) {
         $platform = $connection->getDatabasePlatform();
         $pdo = $connection->getWrappedConnection();
@@ -159,6 +163,9 @@ class SqlDumper extends AbstractDumper
         $tableName = $table->getName();
         $quotedTableName = $table->getQuotedName($platform);
         $insertColumns = null;
+
+        $bufferRowCount = 0; // number of rows in buffer
+        $buffer = array(); // array to buffer rows
 
         $this->collectedValues[$tableName] = array();
         $collectColumns = array();
@@ -199,8 +206,23 @@ class SqlDumper extends AbstractDumper
                 $this->collectedValues[$tableName][$collectColumn][] = $row[$collectColumn];
             }
 
+            $buffer[] = '(' . implode(', ', $row) . ')';
+            $bufferRowCount++;
+
+            if ($bufferRowCount >= $bufferSize) {
+                $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
+                    ' VALUES ' . implode(', ', $buffer) . ';';
+
+                $output->writeln($query);
+
+                $buffer = array();
+                $bufferRowCount = 0;
+            }
+        }
+
+        if ($bufferRowCount > 0) {
             $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
-                ' VALUES (' . implode(', ', $row) . ');';
+                ' VALUES ' . implode(', ', $buffer) . ';';
 
             $output->writeln($query);
         }

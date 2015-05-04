@@ -16,6 +16,9 @@ class SqlDumperTest extends AbstractSqlTest
 
         $output = new TestOutput();
         $config = new DumperConfiguration(array(
+            'output' => array(
+                'rowsPerStatement' => 3,
+            ),
             'tables' => array(
                 'Billing' => array(
                     'filters' => array(
@@ -27,7 +30,7 @@ class SqlDumperTest extends AbstractSqlTest
                     ),
                 ),
                 'Customer' => array(
-                    'limit' => 1,
+                    'limit' => 4,
                     'converters' => array(
                         'name' => array(
                             array('String' => 'Foobar'),
