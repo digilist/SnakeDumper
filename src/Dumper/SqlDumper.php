@@ -203,6 +203,15 @@ class SqlDumper extends AbstractDumper
             }
 
             foreach ($collectColumns as $collectColumn) {
+                if (!isset($row[$collectColumn])) {
+                    throw new \InvalidArgumentException(
+                        sprintf(
+                            'Trying to collect value of column %s in table %s which does not exist.',
+                            $collectColumn,
+                            $tableName
+                        )
+                    );
+                }
                 $this->collectedValues[$tableName][$collectColumn][] = $row[$collectColumn];
             }
 

@@ -233,7 +233,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function setCollectColumns($collectColumns)
     {
-        $this->collectColumns = $collectColumns;
+        $this->collectColumns = array_unique($collectColumns);
 
         return $this;
     }
@@ -243,9 +243,10 @@ class TableConfiguration extends AbstractConfiguration
      *
      * @return $this
      */
-    public function addCollectColumns($collectColumn)
+    public function addCollectColumn($collectColumn)
     {
         $this->collectColumns[] = $collectColumn;
+        $this->collectColumns = array_unique($this->collectColumns);
 
         return $this;
     }

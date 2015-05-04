@@ -120,13 +120,20 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
         return $this->outputConfiguration;
     }
 
-    protected function parseConfig(array $config)
+    protected function parseConfig(array $dumperConfig)
     {
-        $this->databaseConfiguration = new DatabaseConfiguration($this->get('database', array()));
-        $this->outputConfiguration = new OutputConfiguration($this->get('output', array()));
+        // ensure keys exist
+        $dumperConfig = array_merge(array(
+            'database' => array(),
+            'output' => array(),
+            'tables' => array(),
+        ), $dumperConfig);
+
+        $this->databaseConfiguration = new DatabaseConfiguration($dumperConfig['database']);
+        $this->outputConfiguration = new OutputConfiguration($dumperConfig['output']);
 
         // parse tables
-        foreach ($this->get('tables', array()) as $name => $tableConfig) {
+        foreach ($dumperConfig['tables'] as $name => $tableConfig) {
             $this->tableConfigurations[$name] = new TableConfiguration($name, $tableConfig);
         }
 
@@ -136,12 +143,12 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
                 if (!array_key_exists($dependency, $this->tableConfigurations)) {
                     $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
                 }
-
-                foreach ($table->getColumns() as $config) {
-                    foreach ($config->getFilters() as $filter) {
-                        if ($filter instanceof DataDependentFilterConfiguration) {
-                            $this->tableConfigurations[$dependency]->addCollectColumns($filter->getColumn());
-                        }
+            }
+            
+            foreach ($table->getColumns() as $columnConfig) {
+                foreach ($columnConfig->getFilters() as $filter) {
+                    if ($filter instanceof DataDependentFilterConfiguration) {
+                        $this->tableConfigurations[$filter->getTable()]->addCollectColumn($filter->getColumn());
                     }
                 }
             }
