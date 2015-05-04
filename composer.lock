@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "14cba273bf2e9aca5960a01c8be333e7",
+    "hash": "2d9ff993d9bd3575baf38116abda9f6d",
     "packages": [
         {
             "name": "digilist/dependency-graph",
@@ -333,19 +333,14 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "git@github.com:digilist/dbal",
-                "reference": "e8205399378a654ab9dcb5a9496fa2ff59bd4c60"
+                "url": "https://github.com/doctrine/dbal.git",
+                "reference": "c8c5470edea31f6f47265c78cf907f756a23816a"
             },
-            "archive": {
-                "exclude": [
-                    "!vendor",
-                    "tests",
-                    "*phpunit.xml",
-                    ".travis.yml",
-                    "build.xml",
-                    "build.properties",
-                    "composer.phar"
-                ]
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/c8c5470edea31f6f47265c78cf907f756a23816a",
+                "reference": "c8c5470edea31f6f47265c78cf907f756a23816a",
+                "shasum": ""
             },
             "require": {
                 "doctrine/common": ">=2.4,<2.6-dev",
@@ -359,12 +354,13 @@
                 "symfony/console": "For helpful console commands such as SQL execution and import of files."
             },
             "bin": [
-                "bin/doctrine-dbal"
+                "bin/doctrine-dbal",
+                "bin/doctrine-dbal.php"
             ],
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5.x-dev"
+                    "dev-master": "2.6.x-dev"
                 }
             },
             "autoload": {
@@ -372,14 +368,11 @@
                     "Doctrine\\DBAL\\": "lib/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "authors": [
-                {
-                    "name": "Guilherme Blanco",
-                    "email": "guilhermeblanco@gmail.com"
-                },
                 {
                     "name": "Roman Borschel",
                     "email": "roman@code-factory.org"
@@ -387,6 +380,10 @@
                 {
                     "name": "Benjamin Eberlei",
                     "email": "kontakt@beberlei.de"
+                },
+                {
+                    "name": "Guilherme Blanco",
+                    "email": "guilhermeblanco@gmail.com"
                 },
                 {
                     "name": "Jonathan Wage",
@@ -401,7 +398,7 @@
                 "persistence",
                 "queryobject"
             ],
-            "time": "2014-11-28 19:02:39"
+            "time": "2015-04-15 23:26:40"
         },
         {
             "name": "doctrine/inflector",

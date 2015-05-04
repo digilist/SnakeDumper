@@ -24,11 +24,5 @@
         "psr-4": {
             "Digilist\\SnakeDumper\\": "src/"
         }
-    },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "git@github.com:digilist/dbal"
-        }
-    ]
+    }
 }
