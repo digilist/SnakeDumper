@@ -2,16 +2,13 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
-use Digilist\SnakeDumper\Converter\Helper\HouseNumberHelper;
-
-class HouseNumberConverter implements ConverterInterface
+class HouseNumberConverter extends FakerConverter
 {
 
-    /**
-     * @inheritdoc
-     */
-    public function convert($value, array $context = array())
+    public function __construct(array $arguments = array())
     {
-        return HouseNumberHelper::generateNumber();
+        $arguments['formatter'] = 'buildingNumber';
+
+        parent::__construct($arguments);
     }
 }

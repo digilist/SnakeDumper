@@ -2,46 +2,31 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
-use Digilist\SnakeDumper\Converter\Helper\HouseNumberHelper;
-use Digilist\SnakeDumper\Converter\Helper\StreetNameHelper;
-
 /**
- * The StreetNameConverter replaces a value
- * with a random street name.
+ * The StreetNameConverter replaces a value with a random street name.
  */
-class StreetNameConverter implements ConverterInterface
+class StreetNameConverter extends FakerConverter
 {
 
     /**
-     * @var bool
+     * If $parameters is a bool it says to include or not to include the street number
+     *
+     * @param array|bool $parameters
      */
-    private $includeNumber = false;
-
-    /**
-     * @param array|bool $parameter
-     */
-    public function __construct($parameter)
+    public function __construct($parameters)
     {
-        if (is_bool($parameter)) {
-            $this->includeNumber = $parameter;
-        } else {
-            if (isset($parameter['number'])) {
-                $this->includeNumber = (bool) $parameter['number'];
-            }
-        }
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function convert($value, array $context = array())
-    {
-        $street = StreetNameHelper::randomStreetName();
-
-        if ($this->includeNumber) {
-            $street .= ' ' . HouseNumberHelper::generateNumber();
+        if (is_bool($parameters)) {
+            $parameters = array(
+                'number' => $parameters,
+            );
+        } else if (!isset($parameters['number'])) {
+            $parameters['number'] = false;
         }
 
-        return $street;
+        $parameters = array_merge(array(
+            'formatter' => $parameters['number'] ? 'streetAddress' : 'streetName',
+        ), $parameters);
+
+        parent::__construct($parameters);
     }
 }

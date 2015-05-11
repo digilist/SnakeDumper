@@ -5,15 +5,14 @@ namespace Digilist\SnakeDumper\Converter;
 use Faker;
 
 /**
- * The JohnDoeConverter replaces a value
- * with a random first and last name.
+ * The CompanyNameConverter replaces a value with a random company name.
  */
-class JohnDoeConverter extends FakerConverter
+class CompanyNameConverter extends FakerConverter
 {
 
     public function __construct(array $arguments = array())
     {
-        $arguments['formatter'] = 'name';
+        $arguments['formatter'] = 'company';
 
         parent::__construct($arguments);
     }

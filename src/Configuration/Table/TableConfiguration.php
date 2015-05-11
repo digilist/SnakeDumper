@@ -277,8 +277,6 @@ class TableConfiguration extends AbstractConfiguration
 
     protected function parseConfig(array $config)
     {
-        $columns = array();
-
         foreach ($this->get('converters', array()) as $columnName => $converters) {
             foreach ($converters as $converterDef) {
                 $parameter = null;

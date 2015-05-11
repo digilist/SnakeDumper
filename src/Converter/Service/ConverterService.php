@@ -100,8 +100,11 @@ class ConverterService implements ConverterServiceInterface
             throw new InvalidConverterException($message);
         }
 
-        $converter = new $class($converterConf->getParameters());
+        $parameters = $converterConf->getParameters();
+        if ($parameters !== null) {
+            return new $class($parameters);
+        }
 
-        return $converter;
+        return new $class();
     }
 }

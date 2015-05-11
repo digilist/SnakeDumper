@@ -2,20 +2,19 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
-use Digilist\SnakeDumper\Converter\Helper\HumanNameHelper;
+use Faker;
 
 /**
  * The LastNameConverter replaces a value
  * with a random last name.
  */
-class LastNameConverter implements ConverterInterface
+class LastNameConverter extends FakerConverter
 {
 
-    /**
-     * @inheritdoc
-     */
-    public function convert($value, array $context = array())
+    public function __construct(array $arguments = array())
     {
-        return HumanNameHelper::randomLastName();
+        $arguments['formatter'] = 'lastName';
+
+        parent::__construct($arguments);
     }
 }
