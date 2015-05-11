@@ -170,7 +170,7 @@ class SqlDumper extends AbstractDumper
         $this->collectedValues[$tableName] = array();
         $collectColumns = array();
         if ($tableConfig !== null) {
-            $collectColumns = $tableConfig->getCollectColumns();
+            $collectColumns = $tableConfig->getHarvestColumns();
             foreach ($collectColumns as $collectColumn) {
                 $this->collectedValues[$tableName][$collectColumn] = array();
             }

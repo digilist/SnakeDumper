@@ -2,7 +2,6 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
-use Digilist\SnakeDumper\Configuration\Table\ColumnConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
 use Doctrine\DBAL\Schema\Table;

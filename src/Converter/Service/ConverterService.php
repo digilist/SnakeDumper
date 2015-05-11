@@ -9,7 +9,7 @@ use Digilist\SnakeDumper\Converter\ConverterInterface;
 use Digilist\SnakeDumper\Exception\InvalidConverterException;
 use ReflectionClass;
 
-abstract class ConverterService implements ConverterServiceInterface
+class ConverterService implements ConverterServiceInterface
 {
 
     /**
@@ -70,7 +70,7 @@ abstract class ConverterService implements ConverterServiceInterface
     protected function addConvertersFromConfig($key, array $converterConfigurations)
     {
         $chainConverter = null;
-        if (count($converterConfigurations) > 0) {
+        if (count($converterConfigurations) > 1) {
             $chainConverter = new ChainConverter();
             $this->addConverter($key, $chainConverter);
         }
@@ -79,9 +79,10 @@ abstract class ConverterService implements ConverterServiceInterface
             $converter = $this->createConverterInstance($converterConf);
             if ($chainConverter != null) {
                 $chainConverter->addConverter($converter);
-            } else {
-                $this->addConverter($key, $converter);
+                continue;
             }
+
+            $this->addConverter($key, $converter);
         }
     }
 

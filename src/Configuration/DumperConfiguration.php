@@ -137,19 +137,22 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
             $this->tableConfigurations[$name] = new TableConfiguration($name, $tableConfig);
         }
 
-        // parse dependent columns
+        // parse dependent tables and columns and match them
+        // a table depends on another table if a dependend filter is defined
         foreach ($this->tableConfigurations as $table) {
+
+            // if the dependent table is not configured, create a configuration
             foreach ($table->getDependencies() as $dependency) {
                 if (!array_key_exists($dependency, $this->tableConfigurations)) {
                     $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
                 }
             }
-            
-            foreach ($table->getColumns() as $columnConfig) {
-                foreach ($columnConfig->getFilters() as $filter) {
-                    if ($filter instanceof DataDependentFilterConfiguration) {
-                        $this->tableConfigurations[$filter->getTable()]->addCollectColumn($filter->getColumn());
-                    }
+
+            // find dependent filters and add harvest columns
+            foreach ($table->getFilters() as $filter) {
+                if ($filter instanceof DataDependentFilterConfiguration) {
+                    // the dependent table needs to collect values of that column
+                    $this->tableConfigurations[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
                 }
             }
         }

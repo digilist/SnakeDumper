@@ -3,7 +3,6 @@
 namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
-use Digilist\SnakeDumper\Configuration\Table\ColumnConfiguration;
 
 class TableConfiguration extends AbstractConfiguration
 {
@@ -14,23 +13,32 @@ class TableConfiguration extends AbstractConfiguration
     private $name;
 
     /**
-     * @var ColumnConfiguration[]
-     */
-    private $columns = array();
-
-    /**
      * Contains the names of all dependent tables
      *
-     * @var array
+     * @var string[]
      */
     private $dependencies = array();
 
     /**
-     * Contains the names of all columns which values should be collected for later reuse.
+     * Contains the names of all columns which values should be collected / harvested for later reuse.
      *
      * @var array
      */
-    private $collectColumns = array();
+    private $harvestColumns = array();
+
+    /**
+     * Converters grouped by column
+     *
+     * @var ConverterConfiguration[][]
+     */
+    private $converters = array();
+
+    /**
+     * Filters grouped by column
+     *
+     * @var FilterConfiguration[][]
+     */
+    private $filters = array();
 
     /**
      * @param string $name
@@ -151,34 +159,6 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return ColumnConfiguration[]
-     */
-    public function getColumns()
-    {
-        return $this->columns;
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return bool
-     */
-    public function hasColumn($name)
-    {
-        return array_key_exists($name, $this->columns);
-    }
-
-    /**
-     * @param string $name
-     *
-     * @return ColumnConfiguration
-     */
-    public function getColumn($name)
-    {
-        return $this->columns[$name];
-    }
-
-    /**
      * @return array
      */
     public function getDependencies()
@@ -221,9 +201,9 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * @return array
      */
-    public function getCollectColumns()
+    public function getHarvestColumns()
     {
-        return $this->collectColumns;
+        return $this->harvestColumns;
     }
 
     /**
@@ -231,11 +211,55 @@ class TableConfiguration extends AbstractConfiguration
      *
      * @return $this
      */
-    public function setCollectColumns($collectColumns)
+    public function setHarvestColumns($collectColumns)
     {
-        $this->collectColumns = array_unique($collectColumns);
+        $this->harvestColumns = array_unique($collectColumns);
 
         return $this;
+    }
+
+    /**
+     * @return ConverterConfiguration[][]
+     */
+    public function getConverters()
+    {
+        return $this->converters;
+    }
+
+    /**
+     * @param $column
+     *
+     * @return ConverterConfiguration[]
+     */
+    public function getConvertersByColumn($column)
+    {
+        if (!isset($this->converters[$column])) {
+            return array();
+        }
+
+        return $this->converters[$column];
+    }
+
+    /**
+     * @return FilterConfiguration[][]
+     */
+    public function getFilters()
+    {
+        return $this->filters;
+    }
+
+    /**
+     * @param $column
+     *
+     * @return FilterConfiguration[]
+     */
+    public function getFiltersByColumn($column)
+    {
+        if (!isset($this->filters[$column])) {
+            return array();
+        }
+
+        return $this->filters[$column];
     }
 
     /**
@@ -243,10 +267,10 @@ class TableConfiguration extends AbstractConfiguration
      *
      * @return $this
      */
-    public function addCollectColumn($collectColumn)
+    public function addHarvestColumn($collectColumn)
     {
-        $this->collectColumns[] = $collectColumn;
-        $this->collectColumns = array_unique($this->collectColumns);
+        $this->harvestColumns[] = $collectColumn;
+        $this->harvestColumns = array_unique($this->harvestColumns);
 
         return $this;
     }
@@ -256,18 +280,25 @@ class TableConfiguration extends AbstractConfiguration
         $columns = array();
 
         foreach ($this->get('converters', array()) as $columnName => $converters) {
-            $columns[$columnName] = $this->createInitialColumnArray();
-            $columns[$columnName]['converters'] = $converters;
+            foreach ($converters as $converterDef) {
+                $parameter = null;
+                if ($converterDef === null) {
+                    $className = 'Null';
+                } elseif (is_array($converterDef)) {
+                    list($className) = array_keys($converterDef);
+                    $parameter = $converterDef[$className];
+                } else {
+                    $className = $converterDef;
+                }
+
+                $this->converters[$columnName][] = new ConverterConfiguration($className, $parameter);
+            }
         }
 
         foreach ($this->get('filters', array()) as $filter) {
             $columnName = $filter[0];
             $operator = $filter[1];
             $value = $filter[2];
-
-            if (!array_key_exists($columnName, $columns)) {
-                $columns[$columnName] = $this->createInitialColumnArray();
-            }
 
             if ($operator == 'depends') {
                 $referencedColumn = explode('.', $value);
@@ -277,33 +308,23 @@ class TableConfiguration extends AbstractConfiguration
                     );
                 }
 
-                $table = $referencedColumn[0];
-                $column = $referencedColumn[1];
+                $referencedTable = $referencedColumn[0];
+                $referencedColumn = $referencedColumn[1];
 
-                $this->dependencies[] = $table;
-                $columns[$columnName]['filters'][] = array(
-                    'operator' => 'depends',
-                    'table' => $table,
-                    'column' => $column,
-                );
+                $this->dependencies[] = $referencedTable;
+
+                $this->filters[] = new DataDependentFilterConfiguration(array(
+                    'columnName' => $columnName,
+                    'referencedTable' => $referencedTable,
+                    'referencedColumn' => $referencedColumn,
+                ));
             } else {
-                $columns[$columnName]['filters'][] = array(
+                $this->filters[] = new FilterConfiguration(array(
+                    'columnName' => $columnName,
                     'operator' => $operator,
                     'value' => $value,
-                );
+                ));
             }
         }
-
-        foreach ($columns as $columnName => $config) {
-            $this->columns[$columnName] = new ColumnConfiguration($columnName, $config);
-        }
-    }
-
-    private function createInitialColumnArray()
-    {
-        return array(
-            'converters' => array(),
-            'filters' => array(),
-        );
     }
 }

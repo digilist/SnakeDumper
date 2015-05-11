@@ -2,45 +2,43 @@
 
 namespace Digilist\SnakeDumper\Configuration\Table;
 
-use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
-
-class DataDependentFilterConfiguration extends StandardFilterConfiguration
+class DataDependentFilterConfiguration extends FilterConfiguration
 {
 
     /**
      * @return string
      */
-    public function getTable()
+    public function getReferencedTable()
     {
-        return $this->get('table');
+        return $this->get('referencedTable');
     }
 
     /**
-     * @param string $table
+     * @param string $referencedTable
      *
      * @return $this
      */
-    public function setTable($table)
+    public function setReferencedTable($referencedTable)
     {
-        return $this->set('table', $table);
+        return $this->set('referencedTable', $referencedTable);
     }
 
     /**
      * @return string
      */
-    public function getColumn()
+    public function getReferencedColumn()
     {
-        return $this->get('column');
+        return $this->get('referencedColumn');
     }
 
     /**
-     * @param string $column
+     * @param string $referencedColumn
      *
      * @return $this
      */
-    public function setColumn($column)
+    public function setReferencedColumn($referencedColumn)
     {
-        return $this->set('column', $column);
+        return $this->set('referencedColumn', $referencedColumn);
     }
 
     protected function parseConfig(array $config)

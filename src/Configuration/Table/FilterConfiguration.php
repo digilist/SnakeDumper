@@ -4,7 +4,7 @@ namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 
-class StandardFilterConfiguration extends AbstractConfiguration
+class FilterConfiguration extends AbstractConfiguration
 {
 
     /**
@@ -33,6 +33,24 @@ class StandardFilterConfiguration extends AbstractConfiguration
         'in',
         'notIn',
     );
+
+    /**
+     * @return string
+     */
+    public function getColumnName()
+    {
+        return $this->get('columnName');
+    }
+
+    /**
+     * @param string $columnName
+     *
+     * @return string
+     */
+    public function setColumnName($columnName)
+    {
+        return $this->set('columnName', $columnName);
+    }
 
     /**
      * @return string

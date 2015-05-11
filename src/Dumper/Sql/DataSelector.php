@@ -97,57 +97,53 @@ class DataSelector
     public function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, $collectedValues)
     {
         $paramIndex = 0;
-        foreach ($tableConfig->getColumns() as $column) {
-            $filters = $column->getFilters();
-
-            foreach ($filters as $filter) {
-                if ($filter instanceof DataDependentFilterConfiguration) {
-                    if (!isset($collectedValues[$filter->getTable()])) {
-                        throw new \InvalidArgumentException(
-                            sprintf(
-                                'The table %s has not been dumped before %s',
-                                $filter->getTable(),
-                                $tableConfig->getName()
-                            )
-                        );
-                    }
-                    if (!isset($collectedValues[$filter->getTable()][$filter->getColumn()])) {
-                        throw new \InvalidArgumentException(
-                            sprintf(
-                                'The column %s on table %s has not been dumped.',
-                                $filter->getTable(),
-                                $tableConfig->getName()
-                            )
-                        );
-                    }
-
-                    $filter->setValue($collectedValues[$filter->getTable()][$filter->getColumn()]);
+        foreach ($tableConfig->getFilters() as $filter) {
+            if ($filter instanceof DataDependentFilterConfiguration) {
+                if (!isset($collectedValues[$filter->getReferencedTable()])) {
+                    throw new \InvalidArgumentException(
+                        sprintf(
+                            'The table %s has not been dumped before %s',
+                            $filter->getReferencedTable(),
+                            $tableConfig->getName()
+                        )
+                    );
+                }
+                if (!isset($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()])) {
+                    throw new \InvalidArgumentException(
+                        sprintf(
+                            'The column %s on table %s has not been dumped.',
+                            $filter->getReferencedTable(),
+                            $tableConfig->getName()
+                        )
+                    );
                 }
 
-                if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
-                    // the in and notIn operator expects an array which needs different handling
-
-                    $param = array();
-                    foreach ((array) $filter->getValue() as $valueIndex => $value) {
-                        $tmpParam = 'param_' . $paramIndex . '_' . $valueIndex;
-                        $param[] = ':' . $tmpParam;
-
-                        $qb->setParameter($tmpParam, $value);
-                    }
-                } else {
-                    $param = ':param_' . $paramIndex;
-
-                    $qb->setParameter('param_' . $paramIndex, $filter->getValue());
-                }
-
-                $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
-                    $this->connection->getDatabasePlatform()->quoteIdentifier($column->getName()),
-                    $param
-                ));
-                $qb->andWhere($expr);
-
-                $paramIndex++;
+                $filter->setValue($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()]);
             }
+
+            if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
+                // the in and notIn operator expects an array which needs different handling
+
+                $param = array();
+                foreach ((array) $filter->getValue() as $valueIndex => $value) {
+                    $tmpParam = 'param_' . $paramIndex . '_' . $valueIndex;
+                    $param[] = ':' . $tmpParam;
+
+                    $qb->setParameter($tmpParam, $value);
+                }
+            } else {
+                $param = ':param_' . $paramIndex;
+
+                $qb->setParameter('param_' . $paramIndex, $filter->getValue());
+            }
+
+            $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
+                $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName()),
+                $param
+            ));
+            $qb->andWhere($expr);
+
+            $paramIndex++;
         }
     }
 }
