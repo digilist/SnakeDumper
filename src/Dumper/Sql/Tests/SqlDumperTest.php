@@ -23,8 +23,8 @@ class SqlDumperTest extends AbstractSqlTest
                 'Billing' => array(
                     'filters' => array(
                         array(
-                            'customer_id',
                             'depends',
+                            'customer_id',
                             'Customer.id',
                         )
                     ),

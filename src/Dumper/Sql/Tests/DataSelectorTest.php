@@ -79,8 +79,8 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
-                    'id',
                     'eq',
+                    'id',
                     1
                 ),
             ),
@@ -103,8 +103,8 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
-                    'id',
                     'in',
+                    'id',
                     array(1, 2, 3),
                 ),
             ),
@@ -127,13 +127,13 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
-                    'id',
                     'lt',
+                    'id',
                     100,
                 ),
                 array(
-                    'name',
                     'eq',
+                    'name',
                     'Markus',
                 ),
             ),
@@ -156,8 +156,8 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Billing', array(
             'filters' => array(
                 array(
-                    'customer_id',
                     'depends',
+                    'customer_id',
                     'Customer.id',
                 ),
             ),

@@ -3,8 +3,9 @@
 namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
+use InvalidArgumentException;
 
-class FilterConfiguration extends AbstractConfiguration
+class DefaultFilter extends AbstractConfiguration
 {
 
     /**
@@ -91,7 +92,7 @@ class FilterConfiguration extends AbstractConfiguration
     protected function parseConfig(array $config)
     {
         if (!in_array($this->getOperator(), self::$validOperators)) {
-            throw new \InvalidArgumentException('Invalid filter operator: ' . $this->getOperator());
+            throw new InvalidArgumentException('Invalid filter operator: ' . $this->getOperator());
         }
     }
 }

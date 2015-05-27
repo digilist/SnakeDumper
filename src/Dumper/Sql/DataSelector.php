@@ -2,7 +2,8 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql;
 
-use Digilist\SnakeDumper\Configuration\Table\DataDependentFilterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\DataDependentFilter;
+use Digilist\SnakeDumper\Configuration\Table\DefaultFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -94,48 +95,15 @@ class DataSelector
      * @param TableConfiguration $tableConfig
      * @param array              $collectedValues
      */
-    public function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, $collectedValues)
+    public function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $collectedValues)
     {
         $paramIndex = 0;
         foreach ($tableConfig->getFilters() as $filter) {
-            if ($filter instanceof DataDependentFilterConfiguration) {
-                if (!isset($collectedValues[$filter->getReferencedTable()])) {
-                    throw new \InvalidArgumentException(
-                        sprintf(
-                            'The table %s has not been dumped before %s',
-                            $filter->getReferencedTable(),
-                            $tableConfig->getName()
-                        )
-                    );
-                }
-                if (!isset($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()])) {
-                    throw new \InvalidArgumentException(
-                        sprintf(
-                            'The column %s on table %s has not been dumped.',
-                            $filter->getReferencedTable(),
-                            $tableConfig->getName()
-                        )
-                    );
-                }
-
-                $filter->setValue($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()]);
+            if ($filter instanceof DataDependentFilter) {
+                $this->handleDataDependentFilter($filter, $tableConfig, $collectedValues);
             }
 
-            if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
-                // the in and notIn operator expects an array which needs different handling
-
-                $param = array();
-                foreach ((array) $filter->getValue() as $valueIndex => $value) {
-                    $tmpParam = 'param_' . $paramIndex . '_' . $valueIndex;
-                    $param[] = ':' . $tmpParam;
-
-                    $qb->setParameter($tmpParam, $value);
-                }
-            } else {
-                $param = ':param_' . $paramIndex;
-
-                $qb->setParameter('param_' . $paramIndex, $filter->getValue());
-            }
+            $param = $this->bindParameters($qb, $filter, $paramIndex);
 
             $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
                 $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName()),
@@ -145,5 +113,70 @@ class DataSelector
 
             $paramIndex++;
         }
+    }
+
+    /**
+     * Validates and modifies the data dependent filter to act like a IN-filter.
+     *
+     * @param DataDependentFilter $filter
+     * @param TableConfiguration               $tableConfig
+     * @param array                            $collectedValues
+     */
+    private function handleDataDependentFilter(
+        DataDependentFilter $filter,
+        TableConfiguration $tableConfig,
+        array $collectedValues
+    ) {
+        if (!isset($collectedValues[$filter->getReferencedTable()])) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'The table %s has not been dumped before %s',
+                    $filter->getReferencedTable(),
+                    $tableConfig->getName()
+                )
+            );
+        }
+        if (!isset($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()])) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    'The column %s on table %s has not been dumped.',
+                    $filter->getReferencedTable(),
+                    $tableConfig->getName()
+                )
+            );
+        }
+
+        $filter->setValue($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()]);
+    }
+
+    /**
+     * Binds all parameters and returns the parameter string/array which will be passed to the expression builder.
+     *
+     * @param QueryBuilder        $qb
+     * @param DefaultFilter $filter
+     * @param int                 $paramIndex
+     *
+     * @return array|string
+     */
+    private function bindParameters(QueryBuilder $qb, DefaultFilter $filter, $paramIndex)
+    {
+        if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
+            // the IN and NOT IN operator expects an array which needs a different handling
+            // -> each value in the array must be mapped to a single param
+
+            $param = array();
+            foreach ((array) $filter->getValue() as $valueIndex => $value) {
+                $tmpParam = 'param_' . $paramIndex . '_' . $valueIndex;
+                $param[] = ':' . $tmpParam;
+
+                $qb->setParameter($tmpParam, $value);
+            }
+        } else {
+            $param = ':param_' . $paramIndex;
+
+            $qb->setParameter('param_' . $paramIndex, $filter->getValue());
+        }
+
+        return $param;
     }
 }

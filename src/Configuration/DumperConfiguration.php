@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-use Digilist\SnakeDumper\Configuration\Table\DataDependentFilterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 
 class DumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
@@ -150,7 +150,7 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
 
             // find dependent filters and add harvest columns
             foreach ($table->getFilters() as $filter) {
-                if ($filter instanceof DataDependentFilterConfiguration) {
+                if ($filter instanceof DataDependentFilter) {
                     // the dependent table needs to collect values of that column
                     $this->tableConfigurations[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
                 }

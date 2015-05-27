@@ -36,7 +36,7 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * Filters grouped by column
      *
-     * @var FilterConfiguration[][]
+     * @var DefaultFilter[][]
      */
     private $filters = array();
 
@@ -241,7 +241,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return FilterConfiguration[][]
+     * @return DefaultFilter[][]
      */
     public function getFilters()
     {
@@ -251,7 +251,7 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * @param $column
      *
-     * @return FilterConfiguration[]
+     * @return DefaultFilter[]
      */
     public function getFiltersByColumn($column)
     {
@@ -294,8 +294,8 @@ class TableConfiguration extends AbstractConfiguration
         }
 
         foreach ($this->get('filters', array()) as $filter) {
-            $columnName = $filter[0];
-            $operator = $filter[1];
+            $operator = $filter[0];
+            $columnName = $filter[1];
             $value = $filter[2];
 
             if ($operator == 'depends') {
@@ -311,13 +311,13 @@ class TableConfiguration extends AbstractConfiguration
 
                 $this->dependencies[] = $referencedTable;
 
-                $this->filters[] = new DataDependentFilterConfiguration(array(
+                $this->filters[] = new DataDependentFilter(array(
                     'columnName' => $columnName,
                     'referencedTable' => $referencedTable,
                     'referencedColumn' => $referencedColumn,
                 ));
             } else {
-                $this->filters[] = new FilterConfiguration(array(
+                $this->filters[] = new DefaultFilter(array(
                     'columnName' => $columnName,
                     'operator' => $operator,
                     'value' => $value,

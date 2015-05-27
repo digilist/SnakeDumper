@@ -35,8 +35,8 @@ tables:
                     condition: "$website != ''"
                     if_true: 'http://www.google.de'
         filters:
-            - ['id', in, [1, 2, 3]] # only select rows which id is 1, 2 or 3
-            - ['name', like, 'Markus %'] # only select rows which column "name" starts with Markus
+            - [in, 'id', [1, 2, 3]] # only select rows which id is 1, 2 or 3
+            - [like, 'name', 'Markus %'] # only select rows which column "name" starts with Markus
     foo_custom:
         query: >
             SELECT *, bar.value1 AS xyz
@@ -47,4 +47,4 @@ tables:
                 - JohnDoe
     foo_depends:
         filters:
-            - [foo_id, depends, foo.id]
+            - [depends, foo, foo.id]

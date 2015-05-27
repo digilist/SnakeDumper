@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration\Table;
 
-class DataDependentFilterConfiguration extends FilterConfiguration
+class DataDependentFilter extends DefaultFilter
 {
 
     /**
