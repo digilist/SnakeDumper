@@ -5,6 +5,7 @@ namespace Digilist\SnakeDumper\Dumper;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
+use Digilist\SnakeDumper\Dumper\Sql\IdentifierQuoter;
 use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Digilist\SnakeDumper\Dumper\Sql\TableFinder;
 use Doctrine\DBAL\Configuration;
@@ -56,12 +57,12 @@ class SqlDumper extends AbstractDumper
         $this->collectedValues = array();
 
         // Retrieve list of tables
-        $tableFinder = new TableFinder($config, $connection);
-        $tables = $tableFinder->findTables();
+        $tableFinder = new TableFinder($connection);
+        $tables = $tableFinder->findTables($config);
 
-        $filter = new TableFilter($config);
-        $tables = $filter->filterWhiteListTables($tables);
-        $tables = $filter->filterIgnoredTables($tables);
+        // Quote all identifiers, as Doctrine DBAL only quotes reserved keywords
+        $identifierQuoter = new IdentifierQuoter($connection);
+        $tables = $identifierQuoter->quoteTables($tables);
 
         $this->dumpPreamble($config, $platform, $output);
         $this->dumpTableStructure($tables, $platform, $output);
@@ -79,7 +80,6 @@ class SqlDumper extends AbstractDumper
         AbstractPlatform $platform,
         OutputInterface $output
     ) {
-
         $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
         $output->writeln($platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
         $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
@@ -129,6 +129,14 @@ class SqlDumper extends AbstractDumper
 
         foreach ($tables as $table) {
             $tableConfig = $config->getTable($table->getName());
+
+            // TODO duplicate, see below
+            if ($tableConfig !== null) {
+                $collectColumns = $tableConfig->getHarvestColumns();
+                foreach ($collectColumns as $collectColumn) {
+                    $this->collectedValues[$tableConfig->getName()][$collectColumn] = array();
+                }
+            }
 
             // check if table contents should be ignored
             if (null !== $tableConfig && $tableConfig->isContentIgnored()) {

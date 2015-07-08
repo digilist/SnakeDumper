@@ -41,6 +41,14 @@ interface DumperConfigurationInterface
      */
     public function getTable($name);
 
+
+    /**
+     * @param TableConfiguration $tableConfiguration
+     *
+     * @return TableConfiguration
+     */
+    public function addTable(TableConfiguration $tableConfiguration);
+
     /**
      * @return array
      */
@@ -51,4 +59,9 @@ interface DumperConfigurationInterface
      * @return $this
      */
     public function setTableWhiteList(array $list);
+
+    /**
+     * @return void
+     */
+    public function parseDependencies();
 }

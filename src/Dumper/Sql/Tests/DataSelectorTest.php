@@ -31,10 +31,10 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testStandardQuery()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
 
         $query = $this->dataSelector->buildSelectQuery(null, $table)->getSQL();
-        $this->assertEquals('SELECT * FROM "Customer" t', $query);
+        $this->assertEquals('SELECT * FROM `Customer` t', $query);
     }
 
     /**
@@ -44,12 +44,12 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testLimit()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Customer');
         $tableConfig->setLimit(100);
 
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
-        $this->assertEquals('SELECT * FROM "Customer" t LIMIT 100', $query);
+        $this->assertEquals('SELECT * FROM `Customer` t LIMIT 100', $query);
     }
 
     /**
@@ -59,12 +59,12 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testOrderBy()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Customer');
         $tableConfig->setOrderBy('id DESC');
 
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
-        $this->assertEquals('SELECT * FROM "Customer" t ORDER BY id DESC', $query);
+        $this->assertEquals('SELECT * FROM `Customer` t ORDER BY id DESC', $query);
     }
 
     /**
@@ -75,7 +75,7 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testBasicFilter()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
@@ -88,7 +88,7 @@ class DataSelectorTest extends AbstractSqlTest
 
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
 
-        $expectedQuery = 'SELECT * FROM "Customer" t WHERE "id" = :param_0';
+        $expectedQuery = 'SELECT * FROM `Customer` t WHERE `id` = :param_0';
         $this->assertEquals($expectedQuery, $query);
     }
 
@@ -99,7 +99,7 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testInFilter()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
@@ -112,7 +112,7 @@ class DataSelectorTest extends AbstractSqlTest
 
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
 
-        $expectedQuery = 'SELECT * FROM "Customer" t WHERE "id" IN (:param_0_0, :param_0_1, :param_0_2)';
+        $expectedQuery = 'SELECT * FROM `Customer` t WHERE `id` IN (:param_0_0, :param_0_1, :param_0_2)';
         $this->assertEquals($expectedQuery, $query);
     }
 
@@ -123,7 +123,7 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testMultipleFilter()
     {
-        $table = new Table('"Customer"'); // Table name must be always quoted
+        $table = new Table('`Customer`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Customer', array(
             'filters' => array(
                 array(
@@ -141,7 +141,7 @@ class DataSelectorTest extends AbstractSqlTest
 
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
 
-        $expectedQuery = 'SELECT * FROM "Customer" t WHERE ("id" < :param_0) AND ("name" = :param_1)';
+        $expectedQuery = 'SELECT * FROM `Customer` t WHERE (`id` < :param_0) AND (`name` = :param_1)';
         $this->assertEquals($expectedQuery, $query);
     }
 
@@ -152,7 +152,7 @@ class DataSelectorTest extends AbstractSqlTest
      */
     public function testDataDependentFilter()
     {
-        $table = new Table('"Billing"'); // Table name must be always quoted
+        $table = new Table('`Billing`'); // Table name must be always quoted
         $tableConfig = new TableConfiguration('Billing', array(
             'filters' => array(
                 array(
@@ -170,7 +170,7 @@ class DataSelectorTest extends AbstractSqlTest
         );
         $query = $this->dataSelector->buildSelectQuery($tableConfig, $table, $collectedValues)->getSQL();
 
-        $expectedQuery = 'SELECT * FROM "Billing" t WHERE "customer_id" IN (:param_0_0, :param_0_1, :param_0_2, :param_0_3)';
+        $expectedQuery = 'SELECT * FROM `Billing` t WHERE (`customer_id` IN (:param_0_0, :param_0_1, :param_0_2, :param_0_3)) OR (`customer_id` IS NULL)';
         $this->assertEquals($expectedQuery, $query);
     }
 }

@@ -241,11 +241,21 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return DefaultFilter[][]
+     * @return DefaultFilter[]
      */
     public function getFilters()
     {
         return $this->filters;
+    }
+
+    /**
+     * @param DefaultFilter $filter
+     *
+     * @return $this
+     */
+    public function addFilter(DefaultFilter $filter)
+    {
+        $this->filters[] = $filter;
     }
 
     /**

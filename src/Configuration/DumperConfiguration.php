@@ -120,6 +120,31 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
         return $this->outputConfiguration;
     }
 
+    /**
+     * Parse table dependencies and add the appropriate harvest columns, if a dependent file exists.
+     */
+    public function parseDependencies()
+    {
+        // parse dependent tables and columns and match them
+        // a table depends on another table if a dependent filter is defined
+        foreach ($this->tableConfigurations as $table) {
+            // if the dependent table is not configured, create a configuration
+            foreach ($table->getDependencies() as $dependency) {
+                if (!array_key_exists($dependency, $this->tableConfigurations)) {
+                    $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
+                }
+            }
+
+            // find dependent filters and add harvest columns
+            foreach ($table->getFilters() as $filter) {
+                if ($filter instanceof DataDependentFilter) {
+                    // the dependent table needs to collect values of that column
+                    $this->tableConfigurations[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
+                }
+            }
+        }
+    }
+
     protected function parseConfig(array $dumperConfig)
     {
         // ensure keys exist
@@ -137,24 +162,6 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
             $this->tableConfigurations[$name] = new TableConfiguration($name, $tableConfig);
         }
 
-        // parse dependent tables and columns and match them
-        // a table depends on another table if a dependend filter is defined
-        foreach ($this->tableConfigurations as $table) {
-
-            // if the dependent table is not configured, create a configuration
-            foreach ($table->getDependencies() as $dependency) {
-                if (!array_key_exists($dependency, $this->tableConfigurations)) {
-                    $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
-                }
-            }
-
-            // find dependent filters and add harvest columns
-            foreach ($table->getFilters() as $filter) {
-                if ($filter instanceof DataDependentFilter) {
-                    // the dependent table needs to collect values of that column
-                    $this->tableConfigurations[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
-                }
-            }
-        }
+        $this->parseDependencies();
     }
 }

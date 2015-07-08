@@ -9,6 +9,8 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
 abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
 {
 
+    const DBNAME = 'snakedumper';
+
     /**
      * @var Connection
      */
@@ -23,12 +25,31 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
     {
         parent::setUp();
 
-        $pdo = new \PDO('sqlite::memory:');
-        $pdo->query('PRAGMA foreign_keys=ON;');
+        // As there is currently no Foreign Key Support for SQLite in Doctrine DBAL, we cannot use SQLite for testing...
+        // see http://www.doctrine-project.org/jira/browse/DBAL-1065
+        // and http://www.doctrine-project.org/jira/browse/DBAL-866
+
+//        $pdo = new \PDO('sqlite::memory:');
+//        $pdo->query('PRAGMA foreign_keys=ON;');
+//
+        // Use MySQL instead.
         $this->connection = DriverManager::getConnection(array(
-            'pdo' => $pdo
+            'user'     => 'root',
+            'password' => '',
+            'host'     => 'localhost',
+            'driver'   => 'pdo_mysql',
         ));
+
+        $this->connection->exec('DROP DATABASE IF EXISTS ' . self::DBNAME);
+        $this->connection->exec('CREATE DATABASE ' . self::DBNAME);
+        $this->connection->exec('USE ' . self::DBNAME);
+
         $this->platform = $this->connection->getDatabasePlatform();
+    }
+
+    public function tearDown()
+    {
+        $this->connection->exec('DROP DATABASE ' . self::DBNAME);
     }
 
     /**
@@ -43,25 +64,25 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         $pdo = $this->connection->getWrappedConnection();
 
         $pdo->query('CREATE TABLE Customer (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
             name VARCHAR(10)
         )');
         $pdo->query('CREATE TABLE Billing (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
             customer_id INTEGER,
             product VARCHAR(100),
             amount REAL,
-            FOREIGN KEY (customer_id) REFERENCES Customer(id)
+            CONSTRAINT customer_id FOREIGN KEY (customer_id) REFERENCES Customer(id)
         )');
         $pdo->query('CREATE INDEX billing_product ON Billing (product)');
 
         if ($randomTables) {
             $pdo->query('CREATE TABLE RandomTable (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(10)
             )');
                 $pdo->query('CREATE TABLE RandomTable2 (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(10)
             )');
         }

@@ -104,11 +104,21 @@ class DataSelector
             }
 
             $param = $this->bindParameters($qb, $filter, $paramIndex);
-
             $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
                 $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName()),
                 $param
             ));
+
+            if ($filter instanceof DataDependentFilter) {
+                // also select null values
+                $expr = $qb->expr()->orX(
+                    $expr,
+                    $qb->expr()->isNull(
+                        $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName())
+                    )
+                );
+            }
+
             $qb->andWhere($expr);
 
             $paramIndex++;
@@ -150,13 +160,15 @@ class DataSelector
     }
 
     /**
-     * Binds all parameters and returns the parameter string/array which will be passed to the expression builder.
+     * Binds the parameters of the filter into the query builder.
+     *
+     * This function returns false, if the condition is not fulfill-able and no row can be selected at all.
      *
      * @param QueryBuilder        $qb
      * @param DefaultFilter $filter
      * @param int                 $paramIndex
      *
-     * @return array|string
+     * @return array|string|bool
      */
     private function bindParameters(QueryBuilder $qb, DefaultFilter $filter, $paramIndex)
     {
@@ -164,8 +176,13 @@ class DataSelector
             // the IN and NOT IN operator expects an array which needs a different handling
             // -> each value in the array must be mapped to a single param
 
+            $values = (array) $filter->getValue();
+            if (empty($values)) {
+                $values = array('_________UNDEFINED__________');
+            }
+
             $param = array();
-            foreach ((array) $filter->getValue() as $valueIndex => $value) {
+            foreach ($values as $valueIndex => $value) {
                 $tmpParam = 'param_' . $paramIndex . '_' . $valueIndex;
                 $param[] = ':' . $tmpParam;
 
