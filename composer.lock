@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "97459125e9b04badf37c5f20e3e71add",
+    "hash": "9ec91bf89c2d2c6767d3e4a75a594970",
     "packages": [
         {
             "name": "digilist/dependency-graph",
@@ -332,7 +332,7 @@
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/dbal/zipball/9e7954694971a5fab6ebabb38f9ffeec49d0d2ad",
+                "url": "https://api.github.com/repos/doctrine/dbal/zipball/4ec16d06fef228db4f154d9ef968154d8144aa63",
                 "reference": "9e7954694971a5fab6ebabb38f9ffeec49d0d2ad",
                 "shasum": ""
             },
@@ -1567,7 +1567,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.3"
+        "php": ">=5.5"
     },
     "platform-dev": []
 }
