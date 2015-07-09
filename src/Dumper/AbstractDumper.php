@@ -4,8 +4,12 @@ namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
-use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractDumper implements DumperInterface
@@ -19,7 +23,17 @@ abstract class AbstractDumper implements DumperInterface
     /**
      * @var OutputInterface
      */
-    protected $output;
+    protected $dumpOutput;
+
+    /**
+     * @var OutputInterface
+     */
+    protected $applicationOutput;
+
+    /**
+     * @var InputInterface
+     */
+    protected $applicationInput;
 
     /**
      * @var LoggerInterface
@@ -33,14 +47,27 @@ abstract class AbstractDumper implements DumperInterface
 
     /**
      * @param DumperConfigurationInterface $config
-     * @param OutputInterface              $output
-     * @param LoggerInterface              $logger
+     * @param OutputInterface              $dumpOutput
+     * @param InputInterface               $applicationInput
+     * @param OutputInterface              $applicationOutput
      */
-    public function __construct(DumperConfigurationInterface $config, OutputInterface $output, LoggerInterface $logger)
-    {
+    public function __construct(
+        DumperConfigurationInterface $config,
+        OutputInterface $dumpOutput,
+        InputInterface $applicationInput,
+        OutputInterface $applicationOutput
+    ) {
         $this->config = $config;
-        $this->output = $output;
-        $this->logger = $logger;
+        $this->applicationOutput = $applicationOutput;
+        $this->applicationInput = $applicationInput;
+        $this->dumpOutput = $dumpOutput;
+
+        if ($applicationOutput->getVerbosity() >= 2 && $applicationOutput instanceof ConsoleOutput) {
+            $this->logger = new Logger('snakedumper');
+            $this->logger->pushHandler(new StreamHandler($applicationOutput->getErrorOutput()->getStream()));
+        } else {
+            $this->logger = new NullLogger();
+        }
     }
 
     /**

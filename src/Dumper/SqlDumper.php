@@ -15,8 +15,12 @@ use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
 use PDO;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 
 class SqlDumper extends AbstractDumper
 {
@@ -38,17 +42,19 @@ class SqlDumper extends AbstractDumper
 
     /**
      * @param DumperConfigurationInterface $config
-     * @param OutputInterface              $output
-     * @param LoggerInterface              $logger
+     * @param OutputInterface              $dumpOutput
+     * @param InputInterface               $applicationInput
+     * @param OutputInterface              $applicationOutput
      * @param Connection                   $connection
      */
     public function __construct(
         DumperConfigurationInterface $config,
-        OutputInterface $output,
-        LoggerInterface $logger,
+        OutputInterface $dumpOutput,
+        InputInterface $applicationInput,
+        OutputInterface $applicationOutput,
         Connection $connection = null
     ) {
-        parent::__construct($config, $output, $logger);
+        parent::__construct($config, $dumpOutput, $applicationInput, $applicationOutput);
 
         $this->setConverterService(SqlConverterService::createFromConfig($config));
         if ($connection === null) {
@@ -80,16 +86,16 @@ class SqlDumper extends AbstractDumper
     /**
      */
     private function dumpPreamble() {
-        $this->output->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
-        $this->output->writeln($this->platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
-        $this->output->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
-        $this->output->writeln('');
+        $this->dumpOutput->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
+        $this->dumpOutput->writeln($this->platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
+        $this->dumpOutput->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
+        $this->dumpOutput->writeln('');
 
         if ($this->platform instanceof MySqlPlatform) {
-            $this->output->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
+            $this->dumpOutput->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
         }
 
-        $this->output->writeln('');
+        $this->dumpOutput->writeln('');
 
         // TODO support other platforms
     }
@@ -105,7 +111,7 @@ class SqlDumper extends AbstractDumper
         foreach ($tables as $table) {
             $structure = $this->platform->getCreateTableSQL($table);
 
-            $this->output->writeln(implode(";\n", $structure) . ';');
+            $this->dumpOutput->writeln(implode(";\n", $structure) . ';');
         }
     }
 
@@ -116,6 +122,18 @@ class SqlDumper extends AbstractDumper
         $this->connection->setFetchMode(PDO::FETCH_ASSOC);
         $this->connection->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
+        $stream = new NullOutput();
+        if ($this->applicationInput->hasOption('progress') && $this->applicationInput->getOption('progress')) {
+            if ($this->applicationOutput instanceof ConsoleOutput) {
+                $stream = $this->applicationOutput->getErrorOutput();
+            }
+        }
+
+        $progress = new ProgressBar($stream, count($tables));
+        // add an additional space, in case logging is also enabled
+        $progress->setFormat($progress->getFormatDefinition('normal') . ' ');
+        $progress->start();
+        
         foreach ($tables as $table) {
             $tableConfig = $this->config->getTableConfig($table->getName());
 
@@ -129,7 +147,11 @@ class SqlDumper extends AbstractDumper
 
             $this->logger->info('Dumping table ' . $table->getName());
             $this->dumpTableContent($tableConfig, $table);
+
+            $progress->advance();
         }
+
+        $progress->finish();
     }
 
     /**
@@ -198,7 +220,7 @@ class SqlDumper extends AbstractDumper
                 $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                     ' VALUES ' . implode(', ', $buffer) . ';';
 
-                $this->output->writeln($query);
+                $this->dumpOutput->writeln($query);
 
                 $buffer = array();
                 $bufferCount = 0;
@@ -209,7 +231,7 @@ class SqlDumper extends AbstractDumper
             $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                 ' VALUES ' . implode(', ', $buffer) . ';';
 
-            $this->output->writeln($query);
+            $this->dumpOutput->writeln($query);
         }
     }
 
@@ -223,7 +245,7 @@ class SqlDumper extends AbstractDumper
             foreach ($table->getForeignKeys() as $constraint) {
                 $constraint = $this->platform->getCreateConstraintSQL($constraint, $table);
 
-                $this->output->writeln($constraint . ';');
+                $this->dumpOutput->writeln($constraint . ';');
             }
         }
     }
@@ -263,6 +285,7 @@ class SqlDumper extends AbstractDumper
      * Connect to the database.
      *
      * @throws \Doctrine\DBAL\DBALException
+     * @return Connection
      */
     private function connect()
     {
@@ -276,9 +299,9 @@ class SqlDumper extends AbstractDumper
         );
 
         $dbalConfig = new Configuration();
-        $this->connection = DriverManager::getConnection($connectionParams, $dbalConfig);
-        $this->connection->connect();
+        $connection = DriverManager::getConnection($connectionParams, $dbalConfig);
+        $connection->connect();
 
-        return $this->connection;
+        return $connection;
     }
 }

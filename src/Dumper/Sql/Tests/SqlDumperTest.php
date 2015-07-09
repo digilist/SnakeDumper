@@ -6,6 +6,9 @@ use Digilist\SnakeDumper\Configuration\DumperConfiguration;
 use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Psr\Log\NullLogger;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\Output;
 
 class SqlDumperTest extends AbstractSqlTest
@@ -47,7 +50,13 @@ class SqlDumperTest extends AbstractSqlTest
             ),
         ));
 
-        $dumper = new SqlDumper($config, $output, new NullLogger(), $this->connection);
+        $dumper = new SqlDumper(
+            $config,
+            $output,
+            new StringInput(''),
+            new NullOutput(),
+            $this->connection
+        );
         $dumper->dump();
 
         $dump = $output->output;

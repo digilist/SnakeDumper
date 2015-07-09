@@ -5,6 +5,7 @@ namespace Digilist\SnakeDumper\Dumper;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 interface DumperInterface
@@ -12,10 +13,16 @@ interface DumperInterface
 
     /**
      * @param DumperConfigurationInterface $config
-     * @param OutputInterface              $output
-     * @param LoggerInterface              $logger
+     * @param OutputInterface              $dumpOutput
+     * @param InputInterface               $applicationInput
+     * @param OutputInterface              $applicationOutput
      */
-    public function __construct(DumperConfigurationInterface $config, OutputInterface $output, LoggerInterface $logger);
+    public function __construct(
+        DumperConfigurationInterface $config,
+        OutputInterface $dumpOutput,
+        InputInterface $applicationInput,
+        OutputInterface $applicationOutput
+    );
 
     /**
      * @return mixed
