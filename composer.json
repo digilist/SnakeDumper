@@ -16,7 +16,8 @@
         "symfony/console": "~2.5",
         "doctrine/dbal": "dev-master",
         "digilist/dependency-graph": "0.2",
-        "fzaninotto/faker": "~1.4"
+        "fzaninotto/faker": "~1.4",
+        "monolog/monolog": "^1.14"
     },
     "require-dev": {
         "phpunit/phpunit": "4.3.*"

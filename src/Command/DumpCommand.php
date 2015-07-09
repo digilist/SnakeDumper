@@ -5,9 +5,11 @@ namespace Digilist\SnakeDumper\Command;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Configuration\DumperConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
-use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
 use Digilist\SnakeDumper\Output\GzipStreamOutput;
+use Monolog\Handler\NullHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -31,9 +33,16 @@ class DumpCommand extends Command
     {
         $config = $this->parseConfig($input);
 
+        $logger = new Logger('logger');
+        if ($output->getVerbosity() >= 2) {
+            $logger->pushHandler(new StreamHandler('php://stderr'));
+        } else {
+            $logger->pushHandler(new NullHandler());
+        }
+
         /** @var DumperInterface $dumper */
         $class = $config->getFullQualifiedDumperClassName();
-        $dumper = new $class($config, $this->getOutputStream($config));
+        $dumper = new $class($config, $this->getOutputStream($config), $logger);
         $dumper->dump();
     }
 

@@ -5,6 +5,7 @@ namespace Digilist\SnakeDumper\Dumper;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
 use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 abstract class AbstractDumper implements DumperInterface
@@ -21,6 +22,11 @@ abstract class AbstractDumper implements DumperInterface
     protected $output;
 
     /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * @var ConverterServiceInterface
      */
     private $converterService;
@@ -28,11 +34,13 @@ abstract class AbstractDumper implements DumperInterface
     /**
      * @param DumperConfigurationInterface $config
      * @param OutputInterface              $output
+     * @param LoggerInterface              $logger
      */
-    public function __construct(DumperConfigurationInterface $config, OutputInterface $output)
+    public function __construct(DumperConfigurationInterface $config, OutputInterface $output, LoggerInterface $logger)
     {
         $this->config = $config;
         $this->output = $output;
+        $this->logger = $logger;
     }
 
     /**

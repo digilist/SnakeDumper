@@ -15,6 +15,7 @@ use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
 use PDO;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class SqlDumper extends AbstractDumper
@@ -38,14 +39,16 @@ class SqlDumper extends AbstractDumper
     /**
      * @param DumperConfigurationInterface $config
      * @param OutputInterface              $output
+     * @param LoggerInterface              $logger
      * @param Connection                   $connection
      */
     public function __construct(
         DumperConfigurationInterface $config,
         OutputInterface $output,
+        LoggerInterface $logger,
         Connection $connection = null
     ) {
-        parent::__construct($config, $output);
+        parent::__construct($config, $output, $logger);
 
         $this->setConverterService(SqlConverterService::createFromConfig($config));
         if ($connection === null) {
@@ -98,6 +101,7 @@ class SqlDumper extends AbstractDumper
      */
     private function dumpTableStructure(array $tables)
     {
+        $this->logger->info('Dumping table structure');
         foreach ($tables as $table) {
             $structure = $this->platform->getCreateTableSQL($table);
 
@@ -119,9 +123,11 @@ class SqlDumper extends AbstractDumper
 
             // check if table contents should be ignored
             if ($tableConfig->isContentIgnored()) {
+                $this->logger->info('Ignoring contents of table ' . $table->getName());
                 continue;
             }
 
+            $this->logger->info('Dumping table ' . $table->getName());
             $this->dumpTableContent($tableConfig, $table);
         }
     }
