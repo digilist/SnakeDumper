@@ -289,17 +289,7 @@ class TableConfiguration extends AbstractConfiguration
     {
         foreach ($this->get('converters', array()) as $columnName => $converters) {
             foreach ($converters as $converterDef) {
-                $parameter = null;
-                if ($converterDef === null) {
-                    $className = 'Null';
-                } elseif (is_array($converterDef)) {
-                    list($className) = array_keys($converterDef);
-                    $parameter = $converterDef[$className];
-                } else {
-                    $className = $converterDef;
-                }
-
-                $this->converters[$columnName][] = new ConverterConfiguration($className, $parameter);
+                $this->converters[$columnName][] = ConverterConfiguration::factory($converterDef);
             }
         }
 

@@ -26,6 +26,28 @@ class ConverterConfiguration
     }
 
     /**
+     * Creates a new converter configuration, from string or array.
+     *
+     * @param null|array|string $converterDef
+     *
+     * @return ConverterConfiguration
+     */
+    public static function factory($converterDef)
+    {
+        $parameter = null;
+        if ($converterDef === null) {
+            $className = 'Null';
+        } elseif (is_array($converterDef)) {
+            list($className) = array_keys($converterDef);
+            $parameter = $converterDef[$className];
+        } else {
+            $className = $converterDef;
+        }
+
+        return new ConverterConfiguration($className, $parameter);
+    }
+
+    /**
      * @return string
      */
     public function getClassName()
