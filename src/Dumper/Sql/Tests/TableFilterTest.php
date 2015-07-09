@@ -72,7 +72,7 @@ class TableFilterTest extends \PHPUnit_Framework_TestCase
         $ignoredTableConfig->setIgnoreTable();
 
         $config = new DumperConfiguration();
-        $config->addTable($ignoredTableConfig);
+        $config->addTableConfig($ignoredTableConfig);
         $tableFilter = new TableFilter($config);
 
         $notIgnoredTable = new Table('not_ignored');

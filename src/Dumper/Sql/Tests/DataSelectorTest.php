@@ -33,7 +33,7 @@ class DataSelectorTest extends AbstractSqlTest
     {
         $table = new Table('`Customer`'); // Table name must be always quoted
 
-        $query = $this->dataSelector->buildSelectQuery(null, $table)->getSQL();
+        $query = $this->dataSelector->buildSelectQuery(new TableConfiguration('Customer'), $table)->getSQL();
         $this->assertEquals('SELECT * FROM `Customer` t', $query);
     }
 

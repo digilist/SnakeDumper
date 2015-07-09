@@ -15,7 +15,12 @@ interface DumperInterface
      *
      * @return mixed
      */
-    public function dump(DumperConfigurationInterface $config, OutputInterface $outputInterface);
+    public function __construct(DumperConfigurationInterface $config, OutputInterface $outputInterface);
+
+    /**
+     * @return mixed
+     */
+    public function dump();
 
     /**
      * @param ConverterServiceInterface $dumper

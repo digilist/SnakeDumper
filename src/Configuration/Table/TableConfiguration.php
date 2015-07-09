@@ -34,9 +34,9 @@ class TableConfiguration extends AbstractConfiguration
     private $converters = array();
 
     /**
-     * Filters grouped by column
+     * Filters
      *
-     * @var DefaultFilter[][]
+     * @var DefaultFilter[]
      */
     private $filters = array();
 

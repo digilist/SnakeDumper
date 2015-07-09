@@ -9,6 +9,9 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 
+/**
+ * This class helps to query the appropriate data that should be dumped.
+ */
 class DataSelector
 {
 
@@ -33,11 +36,7 @@ class DataSelector
      * @return \Doctrine\DBAL\Driver\Statement
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function executeSelectQuery(
-        TableConfiguration $tableConfig = null,
-        Table $table,
-        $collectedValues
-    )
+    public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, $collectedValues)
     {
         if ($tableConfig != null && $tableConfig->getQuery() != null) {
             $result = $this->connection->prepare($tableConfig->getQuery());
@@ -60,11 +59,7 @@ class DataSelector
      *
      * @return QueryBuilder
      */
-    public function buildSelectQuery(
-        TableConfiguration $tableConfig = null,
-        Table $table,
-        $collectedValues = array()
-    )
+    public function buildSelectQuery(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
     {
         if ($tableConfig != null && $tableConfig->getQuery() != null) {
             throw new \InvalidArgumentException('If a query is predefined, you cannot build the select query!');

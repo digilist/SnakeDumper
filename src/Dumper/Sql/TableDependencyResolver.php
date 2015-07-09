@@ -13,7 +13,7 @@ use Doctrine\DBAL\Schema\Table;
 /**
  * This class helps to resolve table dependencies by foreign key constraints.
  */
-class TableDependencies
+class TableDependencyResolver
 {
 
     /**
@@ -25,11 +25,7 @@ class TableDependencies
     public function createDependentFilters(array $tables, DumperConfigurationInterface $config)
     {
         foreach ($tables as $table) {
-            if (!$config->hasTable($table->getName())) {
-                $config->addTable(new TableConfiguration($table->getName()));
-            }
-
-            $tableConfig = $config->getTable($table->getName());
+            $tableConfig = $config->getTableConfig($table->getName());
             $this->findDependencies($table->getForeignKeys(), $tableConfig, $config);
         }
 
@@ -86,11 +82,11 @@ class TableDependencies
         foreach ($foreignKeys as $foreignKey) {
             $foreignTable = $foreignKey->getForeignTableName();
 
-            if (!$config->hasTable($foreignTable)) {
-                $config->addTable(new TableConfiguration($foreignTable));
+            if (!$config->hasTableConfig($foreignTable)) {
+                $config->addTableConfig(new TableConfiguration($foreignTable));
             }
 
-            $foreignTableConfig = $config->getTable($foreignTable);
+            $foreignTableConfig = $config->getTableConfig($foreignTable);
             if ($foreignTableConfig->getLimit() > 0 || count($foreignTableConfig->getFilters()) > 0 ||
                     $foreignTableConfig->getQuery() != null) {
                 $tableConfig->addFilter(new DataDependentFilter(array(

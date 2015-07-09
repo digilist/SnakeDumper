@@ -71,10 +71,10 @@ class TableFilter
      * @return bool
      */
     public function isTableNotIgnored(Table $table) {
-        if (!$this->config->hasTable($table->getName())) {
+        if (!$this->config->hasTableConfig($table->getName())) {
             return true;
         }
 
-        return !$this->config->getTable($table->getName())->isTableIgnored();
+        return !$this->config->getTableConfig($table->getName())->isTableIgnored();
     }
 }

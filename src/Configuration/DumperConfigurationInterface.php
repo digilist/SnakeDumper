@@ -15,39 +15,39 @@ interface DumperConfigurationInterface
     /**
      * @return DatabaseConfiguration
      */
-    public function getDatabase();
+    public function getDatabaseConfig();
 
     /**
      * @return OutputConfiguration
      */
-    public function getOutput();
+    public function getOutputConfig();
 
     /**
      * @return TableConfiguration[]
      */
-    public function getTables();
+    public function getTableConfigs();
 
     /**
      * @param string $name
      *
      * @return bool
      */
-    public function hasTable($name);
+    public function hasTableConfig($name);
 
     /**
      * @param string $name
      *
      * @return TableConfiguration
      */
-    public function getTable($name);
+    public function getTableConfig($name);
 
 
     /**
-     * @param TableConfiguration $tableConfiguration
+     * @param TableConfiguration $tableConfig
      *
      * @return TableConfiguration
      */
-    public function addTable(TableConfiguration $tableConfiguration);
+    public function addTableConfig(TableConfiguration $tableConfig);
 
     /**
      * @return array

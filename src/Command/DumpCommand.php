@@ -33,10 +33,8 @@ class DumpCommand extends Command
 
         /** @var DumperInterface $dumper */
         $class = $config->getFullQualifiedDumperClassName();
-        $dumper = new $class();
-
-        $dumper->setConverterService(SqlConverterService::createFromConfig($config));
-        $dumper->dump($config, $this->getOutputStream($config));
+        $dumper = new $class($config, $this->getOutputStream($config));
+        $dumper->dump();
     }
 
     private function parseConfig(InputInterface $input)
@@ -70,10 +68,10 @@ class DumpCommand extends Command
      */
     private function getOutputStream(DumperConfigurationInterface $config)
     {
-        if ($config->getOutput()->getGzip()) {
-            return new GzipStreamOutput(gzopen($config->getOutput()->getFile(), 'w'));
+        if ($config->getOutputConfig()->getGzip()) {
+            return new GzipStreamOutput(gzopen($config->getOutputConfig()->getFile(), 'w'));
         }
 
-        return new StreamOutput(fopen($config->getOutput()->getFile(), 'w'));
+        return new StreamOutput(fopen($config->getOutputConfig()->getFile(), 'w'));
     }
 }

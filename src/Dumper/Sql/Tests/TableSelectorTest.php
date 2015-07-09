@@ -5,9 +5,9 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 use Digilist\SnakeDumper\Configuration\DumperConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\IdentifierQuoter;
-use Digilist\SnakeDumper\Dumper\Sql\TableFinder;
+use Digilist\SnakeDumper\Dumper\Sql\TableSelector;
 
-class TableFinderTest extends AbstractSqlTest
+class TableSelectorTest extends AbstractSqlTest
 {
 
     /**
@@ -17,24 +17,21 @@ class TableFinderTest extends AbstractSqlTest
      */
     public function testWithoutTables()
     {
-        $tableFinder = new TableFinder($this->connection);
-        $this->assertEquals(array(), $tableFinder->findTables(new DumperConfiguration()));
+        $tableSelector = new TableSelector($this->connection);
+        $this->assertEquals(array(), $tableSelector->selectTables(new DumperConfiguration()));
     }
 
     /**
-     * Tests whether the table finder works correctly and if the identifier quoting works.
+     * Tests whether the table selecter works correctly and if the identifier quoting works.
      *
      * @test
      */
-    public function testFindTables()
+    public function testSelectTables()
     {
-        $tableFinder = new TableFinder($this->connection);
-        $identifierQuoter = new IdentifierQuoter($this->connection);
-
+        $tableSelector = new TableSelector($this->connection);
         $this->createTestSchema();
 
-        $tables = $tableFinder->findTables(new DumperConfiguration());
-        $tables = $identifierQuoter->quoteTables($tables);
+        $tables = $tableSelector->selectTables(new DumperConfiguration());
 
         $this->assertEquals(2, count($tables));
 

@@ -46,9 +46,8 @@ class SqlDumperTest extends AbstractSqlTest
             ),
         ));
 
-        $dumper = new SqlDumper();
-        $dumper->setConverterService(SqlConverterService::createFromConfig($config));
-        $dumper->dump($config, $output, $this->connection);
+        $dumper = new SqlDumper($config, $output, $this->connection);
+        $dumper->dump();
 
         $dump = $output->output;
         $this->assertEquals(file_get_contents(__DIR__ . '/test_dump.sql'), $dump);

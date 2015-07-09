@@ -55,8 +55,4 @@ class OutputConfiguration extends AbstractConfiguration
     {
         $this->set('rowsPerStatement', $rowsPerStatement);
     }
-
-    protected function parseConfig(array $config)
-    {
-    }
 }

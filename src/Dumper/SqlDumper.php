@@ -4,16 +4,16 @@ namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
 use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
-use Digilist\SnakeDumper\Dumper\Sql\IdentifierQuoter;
-use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
-use Digilist\SnakeDumper\Dumper\Sql\TableFinder;
+use Digilist\SnakeDumper\Dumper\Sql\TableSelector;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Table;
+use InvalidArgumentException;
 use PDO;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -21,75 +21,72 @@ class SqlDumper extends AbstractDumper
 {
 
     /**
-     * @var array
+     * @var Connection
      */
-    private $collectedValues;
+    private $connection;
 
     /**
-     * @var DataSelector
+     * @var AbstractPlatform
      */
-    private $dataSelector;
+    private $platform;
+
+    /**
+     * @var array
+     */
+    private $collectedValues = array();
+
+    /**
+     * @param DumperConfigurationInterface $config
+     * @param OutputInterface              $output
+     * @param Connection                   $connection
+     */
+    public function __construct(
+        DumperConfigurationInterface $config,
+        OutputInterface $output,
+        Connection $connection = null
+    ) {
+        parent::__construct($config, $output);
+
+        $this->setConverterService(SqlConverterService::createFromConfig($config));
+        if ($connection === null) {
+            $connection = $this->connect();
+        }
+
+        $this->connection = $connection;
+        $this->platform = $connection->getDatabasePlatform();
+    }
+
 
     /**
      * {@inheritdoc}
      */
-    public function dump(DumperConfigurationInterface $config, OutputInterface $output, Connection $connection = null)
+    public function dump()
     {
-        if ($connection === null) {
-            $connectionParams = array(
-                'driver'   => $config->getDatabase()->getDriver(),
-                'host'     => $config->getDatabase()->getHost(),
-                'user'     => $config->getDatabase()->getUser(),
-                'password' => $config->getDatabase()->getPassword(),
-                'dbname'   => $config->getDatabase()->getDatabaseName(),
-                'charset'  => $config->getDatabase()->getCharset(),
-            );
-
-            $dbalConfig = new Configuration();
-            $connection = DriverManager::getConnection($connectionParams, $dbalConfig);
-            $connection->connect();
-        }
-
-        $platform = $connection->getDatabasePlatform();
-        $platform->registerDoctrineTypeMapping('enum', 'string');
-
-        $this->dataSelector = new DataSelector($connection);
-        $this->collectedValues = array();
+        $this->platform->registerDoctrineTypeMapping('enum', 'string');
 
         // Retrieve list of tables
-        $tableFinder = new TableFinder($connection);
-        $tables = $tableFinder->findTables($config);
+        $tableFinder = new TableSelector($this->connection);
+        $tables = $tableFinder->selectTables($this->config);
 
-        // Quote all identifiers, as Doctrine DBAL only quotes reserved keywords
-        $identifierQuoter = new IdentifierQuoter($connection);
-        $tables = $identifierQuoter->quoteTables($tables);
-
-        $this->dumpPreamble($config, $platform, $output);
-        $this->dumpTableStructure($tables, $platform, $output);
-        $this->dumpTableContents($config, $tables, $connection, $output, $config->getOutput()->getRowsPerStatement());
-        $this->dumpConstraints($tables, $platform, $output);
+        $this->dumpPreamble();
+        $this->dumpTableStructure($tables);
+        $this->dumpTableContents($tables);
+        $this->dumpConstraints($tables);
     }
 
     /**
-     * @param DumperConfigurationInterface $config
-     * @param AbstractPlatform             $platform
-     * @param OutputInterface              $output
      */
-    private function dumpPreamble(
-        DumperConfigurationInterface $config,
-        AbstractPlatform $platform,
-        OutputInterface $output
-    ) {
-        $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
-        $output->writeln($platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
-        $output->writeln($platform->getSqlCommentStartString() . ' ------------------------');
-        $output->writeln('');
+    private function dumpPreamble() {
+        $this->output->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
+        $this->output->writeln($this->platform->getSqlCommentStartString() . ' SnakeDumper SQL Dump');
+        $this->output->writeln($this->platform->getSqlCommentStartString() . ' ------------------------');
+        $this->output->writeln('');
 
-        if ($platform instanceof MySqlPlatform) {
-            $output->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
+        if ($this->platform instanceof MySqlPlatform) {
+            $this->output->writeln('SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";');
         }
 
-        $output->writeln('');
+        $this->output->writeln('');
 
         // TODO support other platforms
     }
@@ -98,52 +95,34 @@ class SqlDumper extends AbstractDumper
      * Dumps the table structures.
      *
      * @param Table[] $tables
-     * @param AbstractPlatform $platform
-     * @param OutputInterface $output
      */
-    private function dumpTableStructure(array $tables, AbstractPlatform $platform, OutputInterface $output)
+    private function dumpTableStructure(array $tables)
     {
         foreach ($tables as $table) {
-            $structure = $platform->getCreateTableSQL($table);
+            $structure = $this->platform->getCreateTableSQL($table);
 
-            $output->writeln(implode(";\n", $structure) . ';');
+            $this->output->writeln(implode(";\n", $structure) . ';');
         }
     }
 
     /**
-     * @param DumperConfigurationInterface $config
-     * @param Table[]                      $tables
-     * @param Connection                   $connection
-     * @param OutputInterface              $output
-     * @param int                          $rowsPerStatement
+     * @param Table[] $tables
      */
-    private function dumpTableContents(
-        DumperConfigurationInterface $config,
-        array $tables,
-        Connection $connection,
-        OutputInterface $output,
-        $rowsPerStatement
-    ) {
-        $connection->setFetchMode(PDO::FETCH_ASSOC);
-        $connection->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+    private function dumpTableContents(array $tables) {
+        $this->connection->setFetchMode(PDO::FETCH_ASSOC);
+        $this->connection->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
         foreach ($tables as $table) {
-            $tableConfig = $config->getTable($table->getName());
+            $tableConfig = $this->config->getTableConfig($table->getName());
 
-            // TODO duplicate, see below
-            if ($tableConfig !== null) {
-                $collectColumns = $tableConfig->getHarvestColumns();
-                foreach ($collectColumns as $collectColumn) {
-                    $this->collectedValues[$tableConfig->getName()][$collectColumn] = array();
-                }
-            }
+            $this->initValueHarvesting($tableConfig);
 
             // check if table contents should be ignored
-            if (null !== $tableConfig && $tableConfig->isContentIgnored()) {
+            if ($tableConfig->isContentIgnored()) {
                 continue;
             }
 
-            $this->dumpTableContent($tableConfig, $table, $connection, $output, $rowsPerStatement);
+            $this->dumpTableContent($tableConfig, $table);
         }
     }
 
@@ -152,37 +131,22 @@ class SqlDumper extends AbstractDumper
      *
      * @param TableConfiguration $tableConfig
      * @param Table              $table
-     * @param Connection         $connection
-     * @param OutputInterface    $output
-     * @param int                $bufferSize
      */
-    private function dumpTableContent(
-        TableConfiguration $tableConfig = null,
-        Table $table,
-        Connection $connection,
-        OutputInterface $output,
-        $bufferSize
-    ) {
-        $platform = $connection->getDatabasePlatform();
-        $pdo = $connection->getWrappedConnection();
+    private function dumpTableContent(TableConfiguration $tableConfig, Table $table) {
+        $this->platform = $this->connection->getDatabasePlatform();
+        $pdo = $this->connection->getWrappedConnection();
 
         $tableName = $table->getName();
-        $quotedTableName = $table->getQuotedName($platform);
+        $quotedTableName = $table->getQuotedName($this->platform);
         $insertColumns = null;
 
-        $bufferRowCount = 0; // number of rows in buffer
+        $collectColumns = $tableConfig->getHarvestColumns();
+        $bufferSize = $this->config->getOutputConfig()->getRowsPerStatement();;
+        $bufferCount = 0; // number of rows in buffer
         $buffer = array(); // array to buffer rows
 
-        $this->collectedValues[$tableName] = array();
-        $collectColumns = array();
-        if ($tableConfig !== null) {
-            $collectColumns = $tableConfig->getHarvestColumns();
-            foreach ($collectColumns as $collectColumn) {
-                $this->collectedValues[$tableName][$collectColumn] = array();
-            }
-        }
-
-        $result = $this->dataSelector->executeSelectQuery($tableConfig, $table, $this->collectedValues);
+        $dataSelector = new DataSelector($this->connection);
+        $result = $dataSelector->executeSelectQuery($tableConfig, $table, $this->collectedValues);
         foreach ($result as $row) {
             /*
              * The following code (in this loop) will be executed for each dumped row!
@@ -205,12 +169,12 @@ class SqlDumper extends AbstractDumper
             if ($insertColumns === null) {
                 // the insert Columns depend on the result set
                 // as custom queries are possible it can't be predefined
-                $insertColumns = $this->extractInsertColumns($platform, array_keys($row));
+                $insertColumns = $this->extractInsertColumns(array_keys($row));
             }
 
             foreach ($collectColumns as $collectColumn) {
                 if (!isset($row[$collectColumn])) {
-                    throw new \InvalidArgumentException(
+                    throw new InvalidArgumentException(
                         sprintf(
                             'Trying to collect value of column %s in table %s which does not exist.',
                             $collectColumn,
@@ -222,24 +186,24 @@ class SqlDumper extends AbstractDumper
             }
 
             $buffer[] = '(' . implode(', ', $row) . ')';
-            $bufferRowCount++;
+            $bufferCount++;
 
-            if ($bufferRowCount >= $bufferSize) {
+            if ($bufferCount >= $bufferSize) {
                 $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                     ' VALUES ' . implode(', ', $buffer) . ';';
 
-                $output->writeln($query);
+                $this->output->writeln($query);
 
                 $buffer = array();
-                $bufferRowCount = 0;
+                $bufferCount = 0;
             }
         }
 
-        if ($bufferRowCount > 0) {
+        if ($bufferCount > 0) {
             $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                 ' VALUES ' . implode(', ', $buffer) . ';';
 
-            $output->writeln($query);
+            $this->output->writeln($query);
         }
     }
 
@@ -247,19 +211,13 @@ class SqlDumper extends AbstractDumper
      * Dump the constraints / foreign keys of all tables.
      *
      * @param Table[]            $tables
-     * @param AbstractPlatform   $platform
-     * @param OutputInterface    $output
      */
-    private function dumpConstraints(
-        array $tables,
-        AbstractPlatform $platform,
-        OutputInterface $output
-    ) {
+    private function dumpConstraints(array $tables) {
         foreach ($tables as $table) {
             foreach ($table->getForeignKeys() as $constraint) {
-                $constraint = $platform->getCreateConstraintSQL($constraint, $table);
+                $constraint = $this->platform->getCreateConstraintSQL($constraint, $table);
 
-                $output->writeln($constraint . ';');
+                $this->output->writeln($constraint . ';');
             }
         }
     }
@@ -268,17 +226,53 @@ class SqlDumper extends AbstractDumper
      * Get a SQL-formatted string of the column order to be used in the INSERT statement.
      * (INSERT INTO foo (--> column1, column2, column3, ... <--)
      *
-     * @param AbstractPlatform $platform
-     * @param array            $columns
+     * @param array $columns
      *
      * @return string
      */
-    private function extractInsertColumns(AbstractPlatform $platform, $columns)
+    private function extractInsertColumns($columns)
     {
-        $columns = array_map(function ($column) use ($platform) {
-            return $platform->quoteIdentifier($column);
+        $columns = array_map(function ($column) {
+            return $this->platform->quoteIdentifier($column);
         }, $columns);
 
         return implode(', ', $columns);
+    }
+
+    /**
+     * Init the array that is used to harvest values for dependency resolving.
+     *
+     * @param TableConfiguration $tableConfig
+     */
+    private function initValueHarvesting(TableConfiguration $tableConfig)
+    {
+        $this->collectedValues[$tableConfig->getName()] = array();
+        $collectColumns = $tableConfig->getHarvestColumns();
+        foreach ($collectColumns as $collectColumn) {
+            $this->collectedValues[$tableConfig->getName()][$collectColumn] = array();
+        }
+    }
+
+    /**
+     * Connect to the database.
+     *
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function connect()
+    {
+        $connectionParams = array(
+            'driver'   => $this->config->getDatabaseConfig()->getDriver(),
+            'host'     => $this->config->getDatabaseConfig()->getHost(),
+            'user'     => $this->config->getDatabaseConfig()->getUser(),
+            'password' => $this->config->getDatabaseConfig()->getPassword(),
+            'dbname'   => $this->config->getDatabaseConfig()->getDatabaseName(),
+            'charset'  => $this->config->getDatabaseConfig()->getCharset(),
+        );
+
+        $dbalConfig = new Configuration();
+        $this->connection = DriverManager::getConnection($connectionParams, $dbalConfig);
+        $this->connection->connect();
+
+        return $this->connection;
     }
 }

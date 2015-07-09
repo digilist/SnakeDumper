@@ -11,32 +11,32 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
     /**
      * @var DatabaseConfiguration
      */
-    private $databaseConfiguration;
+    private $databaseConfig;
 
     /**
      * @var OutputConfiguration
      */
-    private $outputConfiguration;
+    private $outputConfig;
 
     /**
      * @var TableConfiguration[]
      */
-    private $tableConfigurations = array();
+    private $tableConfigs = array();
 
     /**
      * @return DatabaseConfiguration
      */
-    public function getDatabase()
+    public function getDatabaseConfig()
     {
-        return $this->databaseConfiguration;
+        return $this->databaseConfig;
     }
 
     /**
      * @return TableConfiguration[]
      */
-    public function getTables()
+    public function getTableConfigs()
     {
-        return $this->tableConfigurations;
+        return $this->tableConfigs;
     }
 
     /**
@@ -61,9 +61,9 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
      *
      * @return bool
      */
-    public function hasTable($name)
+    public function hasTableConfig($name)
     {
-        return array_key_exists($name, $this->tableConfigurations);
+        return array_key_exists($name, $this->tableConfigs);
     }
 
     /**
@@ -74,26 +74,25 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
      *
      * @return TableConfiguration
      */
-    public function getTable($name)
+    public function getTableConfig($name)
     {
-        if (!array_key_exists($name, $this->tableConfigurations)) {
+        if (!array_key_exists($name, $this->tableConfigs)) {
             return null;
         }
 
-        return $this->tableConfigurations[$name];
+        return $this->tableConfigs[$name];
     }
 
     /**
-     * Returns the table for configuration of the table with the passed name.
-     * If there is no configuration, null will be returned.
+     * Add a new table configuration.
      *
-     * @param TableConfiguration $table
+     * @param TableConfiguration $tableConfig
      *
      * @return TableConfiguration
      */
-    public function addTable(TableConfiguration $table)
+    public function addTableConfig(TableConfiguration $tableConfig)
     {
-        return $this->tableConfigurations[$table->getName()] = $table;
+        return $this->tableConfigs[$tableConfig->getName()] = $tableConfig;
     }
 
     /**
@@ -115,9 +114,9 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
     /**
      * @return OutputConfiguration
      */
-    public function getOutput()
+    public function getOutputConfig()
     {
-        return $this->outputConfiguration;
+        return $this->outputConfig;
     }
 
     /**
@@ -127,11 +126,11 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
     {
         // parse dependent tables and columns and match them
         // a table depends on another table if a dependent filter is defined
-        foreach ($this->tableConfigurations as $table) {
+        foreach ($this->tableConfigs as $table) {
             // if the dependent table is not configured, create a configuration
             foreach ($table->getDependencies() as $dependency) {
-                if (!array_key_exists($dependency, $this->tableConfigurations)) {
-                    $this->tableConfigurations[$dependency] = new TableConfiguration($dependency, array());
+                if (!array_key_exists($dependency, $this->tableConfigs)) {
+                    $this->tableConfigs[$dependency] = new TableConfiguration($dependency, array());
                 }
             }
 
@@ -139,7 +138,7 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
             foreach ($table->getFilters() as $filter) {
                 if ($filter instanceof DataDependentFilter) {
                     // the dependent table needs to collect values of that column
-                    $this->tableConfigurations[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
+                    $this->tableConfigs[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
                 }
             }
         }
@@ -154,12 +153,12 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
             'tables' => array(),
         ), $dumperConfig);
 
-        $this->databaseConfiguration = new DatabaseConfiguration($dumperConfig['database']);
-        $this->outputConfiguration = new OutputConfiguration($dumperConfig['output']);
+        $this->databaseConfig = new DatabaseConfiguration($dumperConfig['database']);
+        $this->outputConfig = new OutputConfiguration($dumperConfig['output']);
 
         // parse tables
         foreach ($dumperConfig['tables'] as $name => $tableConfig) {
-            $this->tableConfigurations[$name] = new TableConfiguration($name, $tableConfig);
+            $this->tableConfigs[$name] = new TableConfiguration($name, $tableConfig);
         }
 
         $this->parseDependencies();

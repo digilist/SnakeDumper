@@ -17,8 +17,8 @@ class SqlConverterService extends ConverterService
     {
         $converterService = new static();
 
-        foreach ($config->getTables() as $tableName => $table) {
-            foreach ($table->getConverters() as $columnName => $converters) {
+        foreach ($config->getTableConfigs() as $tableName => $tableConfig) {
+            foreach ($tableConfig->getConverters() as $columnName => $converters) {
                 $key = sprintf('%s.%s', $tableName, $columnName);
                 $converterService->addConvertersFromConfig($key, $converters);
             }
