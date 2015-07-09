@@ -13,7 +13,7 @@ class StreetNameConverter extends FakerConverter
      *
      * @param array|bool $parameters
      */
-    public function __construct($parameters)
+    public function __construct($parameters = false)
     {
         if (is_bool($parameters)) {
             $parameters = array(
