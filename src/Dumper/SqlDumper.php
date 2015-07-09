@@ -133,8 +133,10 @@ class SqlDumper extends AbstractDumper
         // add an additional space, in case logging is also enabled
         $progress->setFormat($progress->getFormatDefinition('normal') . ' ');
         $progress->start();
-        
+
         foreach ($tables as $table) {
+            $progress->advance();
+
             $tableConfig = $this->config->getTableConfig($table->getName());
 
             $this->initValueHarvesting($tableConfig);
@@ -147,11 +149,10 @@ class SqlDumper extends AbstractDumper
 
             $this->logger->info('Dumping table ' . $table->getName());
             $this->dumpTableContent($tableConfig, $table);
-
-            $progress->advance();
         }
 
         $progress->finish();
+        $this->logger->info('Dump finished' . $table->getName());
     }
 
     /**
@@ -161,7 +162,6 @@ class SqlDumper extends AbstractDumper
      * @param Table              $table
      */
     private function dumpTableContent(TableConfiguration $tableConfig, Table $table) {
-        $this->platform = $this->connection->getDatabasePlatform();
         $pdo = $this->connection->getWrappedConnection();
 
         $tableName = $table->getName();

@@ -42,6 +42,7 @@ tables:
             SELECT *, bar.value1 AS xyz
             FROM foo_custom
             JOIN bar
+            WHERE $autoConditions
         converters:
             name:
                 - JohnDoe

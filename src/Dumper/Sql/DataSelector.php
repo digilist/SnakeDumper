@@ -38,16 +38,24 @@ class DataSelector
      */
     public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, $collectedValues)
     {
-        if ($tableConfig != null && $tableConfig->getQuery() != null) {
-            $result = $this->connection->prepare($tableConfig->getQuery());
-            $result->execute();
+        $qb = $this->createSelectQueryBuilder($tableConfig, $table, $collectedValues);
 
-            return $result;
+        $query = $qb->getSQL();
+        $parameters = $qb->getParameters();
+
+        if ($tableConfig->getQuery() != null) {
+            $query = $tableConfig->getQuery();
+
+            // Add automatic conditions to the custom query if necessary
+            $parameters = [];
+            if (strpos($query, '$autoConditions') !== false) {
+                $parameters = $qb->getParameters();
+                $query = str_replace('$autoConditions', '(' . $qb->getQueryPart('where') . ')', $query);
+            }
         }
 
-        $qb = $this->buildSelectQuery($tableConfig, $table, $collectedValues);
-
-        $result = $qb->execute();
+        $result = $this->connection->prepare($query);
+        $result->execute($parameters);
 
         return $result;
     }
@@ -59,25 +67,18 @@ class DataSelector
      *
      * @return QueryBuilder
      */
-    public function buildSelectQuery(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
+    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
     {
-        if ($tableConfig != null && $tableConfig->getQuery() != null) {
-            throw new \InvalidArgumentException('If a query is predefined, you cannot build the select query!');
-        }
-
         $qb = $this->connection->createQueryBuilder()
             ->select('*')
             ->from($table->getQuotedName($this->connection->getDatabasePlatform()), 't');
 
-        if ($tableConfig != null) {
-            $this->addFiltersToSelectQuery($qb, $tableConfig, $collectedValues);
-
-            if ($tableConfig->getLimit() != null) {
-                $qb->setMaxResults($tableConfig->getLimit());
-            }
-            if ($tableConfig->getOrderBy() != null) {
-                $qb->add('orderBy', $tableConfig->getOrderBy());
-            }
+        $this->addFiltersToSelectQuery($qb, $tableConfig, $collectedValues);
+        if ($tableConfig->getLimit() != null) {
+            $qb->setMaxResults($tableConfig->getLimit());
+        }
+        if ($tableConfig->getOrderBy() != null) {
+            $qb->add('orderBy', $tableConfig->getOrderBy());
         }
 
         return $qb;
@@ -90,7 +91,7 @@ class DataSelector
      * @param TableConfiguration $tableConfig
      * @param array              $collectedValues
      */
-    public function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $collectedValues)
+    private function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $collectedValues)
     {
         $paramIndex = 0;
         foreach ($tableConfig->getFilters() as $filter) {

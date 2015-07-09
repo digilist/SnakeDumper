@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 
 class DataSelectorTest extends AbstractSqlTest
@@ -15,6 +16,11 @@ class DataSelectorTest extends AbstractSqlTest
     private $dataSelector;
 
     /**
+     * @var \ReflectionMethod
+     */
+    private $createSelectQueryBuilder;
+
+    /**
      *
      */
     public function setUp()
@@ -22,6 +28,12 @@ class DataSelectorTest extends AbstractSqlTest
         parent::setUp();
 
         $this->dataSelector = new DataSelector($this->connection);
+
+        $refl = new \ReflectionObject($this->dataSelector);
+        $createSelectQueryBuilder = $refl->getMethod('createSelectQueryBuilder');
+        $createSelectQueryBuilder->setAccessible(true);
+
+        $this->createSelectQueryBuilder = $createSelectQueryBuilder;
     }
 
     /**
@@ -33,7 +45,7 @@ class DataSelectorTest extends AbstractSqlTest
     {
         $table = new Table('`Customer`'); // Table name must be always quoted
 
-        $query = $this->dataSelector->buildSelectQuery(new TableConfiguration('Customer'), $table)->getSQL();
+        $query = $this->createSelectQueryBuilder(new TableConfiguration('Customer'), $table)->getSQL();
         $this->assertEquals('SELECT * FROM `Customer` t', $query);
     }
 
@@ -48,7 +60,7 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Customer');
         $tableConfig->setLimit(100);
 
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
         $this->assertEquals('SELECT * FROM `Customer` t LIMIT 100', $query);
     }
 
@@ -63,7 +75,7 @@ class DataSelectorTest extends AbstractSqlTest
         $tableConfig = new TableConfiguration('Customer');
         $tableConfig->setOrderBy('id DESC');
 
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
         $this->assertEquals('SELECT * FROM `Customer` t ORDER BY id DESC', $query);
     }
 
@@ -86,7 +98,7 @@ class DataSelectorTest extends AbstractSqlTest
             ),
         ));
 
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
 
         $expectedQuery = 'SELECT * FROM `Customer` t WHERE `id` = :param_0';
         $this->assertEquals($expectedQuery, $query);
@@ -110,7 +122,7 @@ class DataSelectorTest extends AbstractSqlTest
             ),
         ));
 
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
 
         $expectedQuery = 'SELECT * FROM `Customer` t WHERE `id` IN (:param_0_0, :param_0_1, :param_0_2)';
         $this->assertEquals($expectedQuery, $query);
@@ -139,7 +151,7 @@ class DataSelectorTest extends AbstractSqlTest
             ),
         ));
 
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
 
         $expectedQuery = 'SELECT * FROM `Customer` t WHERE (`id` < :param_0) AND (`name` = :param_1)';
         $this->assertEquals($expectedQuery, $query);
@@ -168,9 +180,20 @@ class DataSelectorTest extends AbstractSqlTest
                 'id' => array(10, 11, 12, 13),
             ),
         );
-        $query = $this->dataSelector->buildSelectQuery($tableConfig, $table, $collectedValues)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table, $collectedValues)->getSQL();
 
         $expectedQuery = 'SELECT * FROM `Billing` t WHERE (`customer_id` IN (:param_0_0, :param_0_1, :param_0_2, :param_0_3)) OR (`customer_id` IS NULL)';
         $this->assertEquals($expectedQuery, $query);
+    }
+
+    /**
+     * @param TableConfiguration $tableConfig
+     * @param Table              $table
+     * @param array              $collectedValues
+     * @return QueryBuilder
+     */
+    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
+    {
+        return $this->createSelectQueryBuilder->invoke($this->dataSelector, $tableConfig, $table, $collectedValues);
     }
 }

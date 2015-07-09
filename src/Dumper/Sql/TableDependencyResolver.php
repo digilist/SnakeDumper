@@ -82,10 +82,6 @@ class TableDependencyResolver
         foreach ($foreignKeys as $foreignKey) {
             $foreignTable = $foreignKey->getForeignTableName();
 
-            if (!$config->hasTableConfig($foreignTable)) {
-                $config->addTableConfig(new TableConfiguration($foreignTable));
-            }
-
             $foreignTableConfig = $config->getTableConfig($foreignTable);
             if ($foreignTableConfig->getLimit() > 0 || count($foreignTableConfig->getFilters()) > 0 ||
                     $foreignTableConfig->getQuery() != null) {
