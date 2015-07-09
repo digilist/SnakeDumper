@@ -7,12 +7,13 @@ use Symfony\Component\Console\Output\Output;
 
 class GzipStreamOutput extends Output
 {
+
     private $stream;
 
     /**
      * Constructor.
      *
-     * @param int                      $stream
+     * @param mixed                    $stream
      * @param bool|int                 $verbosity
      * @param null                     $decorated
      * @param OutputFormatterInterface $formatter

@@ -62,9 +62,9 @@ abstract class AbstractDumper implements DumperInterface
         $this->applicationInput = $applicationInput;
         $this->dumpOutput = $dumpOutput;
 
-        if ($applicationOutput->getVerbosity() >= 2 && $applicationOutput instanceof ConsoleOutput) {
+        if ($applicationOutput->getVerbosity() >= 2) {
             $this->logger = new Logger('snakedumper');
-            $this->logger->pushHandler(new StreamHandler($applicationOutput->getErrorOutput()->getStream()));
+            $this->logger->pushHandler(new StreamHandler(fopen('php://stderr', 'w')));
         } else {
             $this->logger = new NullLogger();
         }
