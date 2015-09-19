@@ -151,7 +151,7 @@ class SqlDumper extends AbstractDumper
         }
 
         $progress->finish();
-        $this->logger->info('Dump finished' . $table->getName());
+        $this->logger->info('Dump finished');
     }
 
     /**
@@ -180,25 +180,6 @@ class SqlDumper extends AbstractDumper
              * Performance in this place is essential!
              */
 
-            $context = $row;
-            foreach ($row as $key => $value) {
-                $value = $this->convert($tableName . '.' . $key, $value, $context);
-
-                if (is_null($value)) {
-                    $value = 'NULL';
-                } elseif (!ctype_digit($value)) {
-                    $value = $pdo->quote($value);
-                }
-
-                $row[$key] = $value;
-            }
-
-            if ($insertColumns === null) {
-                // the insert Columns depend on the result set
-                // as custom queries are possible it can't be predefined
-                $insertColumns = $this->extractInsertColumns(array_keys($row));
-            }
-
             foreach ($collectColumns as $collectColumn) {
                 if (!isset($row[$collectColumn])) {
                     throw new InvalidArgumentException(
@@ -210,6 +191,25 @@ class SqlDumper extends AbstractDumper
                     );
                 }
                 $this->collectedValues[$tableName][$collectColumn][] = $row[$collectColumn];
+            }
+
+            $context = $row;
+            foreach ($row as $key => $value) {
+                $value = $this->convert($tableName . '.' . $key, $value, $context);
+
+                if (is_null($value)) {
+                    $value = 'NULL';
+                } else {
+                    $value = $pdo->quote($value);
+                }
+
+                $row[$key] = $value;
+            }
+
+            if ($insertColumns === null) {
+                // the insert Columns depend on the result set
+                // as custom queries are possible it can't be predefined
+                $insertColumns = $this->extractInsertColumns(array_keys($row));
             }
 
             $buffer[] = '(' . implode(', ', $row) . ')';
