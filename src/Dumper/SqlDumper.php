@@ -161,6 +161,9 @@ class SqlDumper extends AbstractDumper
      * @param Table              $table
      */
     private function dumpTableContent(TableConfiguration $tableConfig, Table $table) {
+        // Ensure connection is still open
+        $this->reconnectIfNecessary();
+
         $pdo = $this->connection->getWrappedConnection();
 
         $tableName = $table->getName();
@@ -302,5 +305,19 @@ class SqlDumper extends AbstractDumper
         $connection->connect();
 
         return $connection;
+    }
+
+    /**
+     * This method checks whether the connection is still open or reconnects otherwise.
+     *
+     * The connection might drop in some scenarios, where the server has a configured timeout and the handling
+     * of the result set takes longer. To prevent failures of the dumper, the connection will be opened again.
+     */
+    private function reconnectIfNecessary()
+    {
+        if (!$this->connection->ping()) {
+            $this->connection->close();
+            $this->connect()->connect();
+        }
     }
 }
