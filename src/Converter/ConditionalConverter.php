@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter;
 
-use Digilist\SnakeDumper\Configuration\Table\ConverterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\ConverterDefinition;
 use Digilist\SnakeDumper\Converter\Helper\VariableParserHelper;
 use Digilist\SnakeDumper\Converter\Service\ConverterService;
 use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
@@ -62,24 +62,14 @@ class ConditionalConverter implements ConverterInterface
         $this->condition = $parameters['condition'];
         if (isset($parameters['if_true'])) {
             $this->ifTrue = $parameters['if_true'];
-        } elseif (isset($parameters['if_true_converters'])) {
-            $converterConfigs = [];
-            foreach ($parameters['if_true_converters'] as $config) {
-                $converterConfigs[] = ConverterConfiguration::factory($config);
-            }
-
-            $this->ifTrueConverter = ConverterService::createConverterFromConfig($converterConfigs);
+        } elseif (!empty($parameters['if_true_converters'])) {
+            $this->ifTrueConverter = $this->createConditionalConverter($parameters['if_true_converters']);
         }
 
         if (isset($parameters['if_false'])) {
             $this->ifFalse = $parameters['if_false'];
-        } elseif (isset($parameters['if_false_converters'])) {
-            $converterConfigs = [];
-            foreach ($parameters['if_false_converters'] as $config) {
-                $converterConfigs[] = ConverterConfiguration::factory($config);
-            }
-
-            $this->ifFalseConverter = ConverterService::createConverterFromConfig($converterConfigs);
+        } elseif (!empty($parameters['if_false_converters'])) {
+            $this->ifFalseConverter = $this->createConditionalConverter($parameters['if_false_converters']);
         }
     }
 
@@ -111,5 +101,27 @@ class ConditionalConverter implements ConverterInterface
         }
 
         return $value;
+    }
+
+    /**
+     * @param array $converterDefinitions
+     *
+     * @return ChainConverter
+     */
+    private function createConditionalConverter($converterDefinitions)
+    {
+        $converters = [];
+        foreach ($converterDefinitions as $definition) {
+            $converterDefinition = ConverterDefinition::factory($definition);
+            $converters[] = ConverterService::createConverterInstance($converterDefinition);
+        }
+
+        if (count($converters) > 1) {
+            $converter = new ChainConverter($converters);
+        } else {
+            $converter = $converters[0];
+        }
+
+        return $converter;
     }
 }

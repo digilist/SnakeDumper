@@ -17,23 +17,11 @@ abstract class AbstractConfiguration
      */
     public function __construct(array $config = array())
     {
+        $this->config = $config;
+
         if (!empty($config)) {
-            $this->fromArray($config);
-            return;
+            $this->parseConfig($config);
         }
-
-        $this->config = $config;
-    }
-
-    /**
-     * @param array $config
-     * @return void
-     */
-    public function fromArray(array $config)
-    {
-        $this->config = $config;
-
-        $this->parseConfig($config);
     }
 
     /**
@@ -94,6 +82,8 @@ abstract class AbstractConfiguration
      * Override to allow additional config parsing if the config is initialized via an array.
      *
      * @param array $config
+     *
+     * @return array
      */
     protected function parseConfig(array $config)
     {

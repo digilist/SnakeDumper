@@ -37,7 +37,7 @@ class SqlDumper extends AbstractDumper
     /**
      * @var array
      */
-    private $collectedValues = array();
+    private $harvestedValues = array();
 
     /**
      * @param DumperConfigurationInterface $config
@@ -161,7 +161,7 @@ class SqlDumper extends AbstractDumper
      * @param Table              $table
      */
     private function dumpTableContent(TableConfiguration $tableConfig, Table $table) {
-        // Ensure connection is still open
+        // Ensure connection is still open (to prevent for example "MySQL server has gone" errors)
         $this->reconnectIfNecessary();
 
         $pdo = $this->connection->getWrappedConnection();
@@ -170,13 +170,13 @@ class SqlDumper extends AbstractDumper
         $quotedTableName = $table->getQuotedName($this->platform);
         $insertColumns = null;
 
-        $collectColumns = $tableConfig->getHarvestColumns();
+        $collectColumns = $tableConfig->getColumnsToHarvest();
         $bufferSize = $this->config->getOutputConfig()->getRowsPerStatement();;
         $bufferCount = 0; // number of rows in buffer
         $buffer = array(); // array to buffer rows
 
         $dataSelector = new DataSelector($this->connection);
-        $result = $dataSelector->executeSelectQuery($tableConfig, $table, $this->collectedValues);
+        $result = $dataSelector->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
         foreach ($result as $row) {
             /*
              * The following code (in this loop) will be executed for each dumped row!
@@ -193,7 +193,7 @@ class SqlDumper extends AbstractDumper
                         )
                     );
                 }
-                $this->collectedValues[$tableName][$collectColumn][] = $row[$collectColumn];
+                $this->harvestedValues[$tableName][$collectColumn][] = $row[$collectColumn];
             }
 
             $context = $row;
@@ -276,10 +276,10 @@ class SqlDumper extends AbstractDumper
      */
     private function initValueHarvesting(TableConfiguration $tableConfig)
     {
-        $this->collectedValues[$tableConfig->getName()] = array();
-        $collectColumns = $tableConfig->getHarvestColumns();
+        $this->harvestedValues[$tableConfig->getName()] = array();
+        $collectColumns = $tableConfig->getColumnsToHarvest();
         foreach ($collectColumns as $collectColumn) {
-            $this->collectedValues[$tableConfig->getName()][$collectColumn] = array();
+            $this->harvestedValues[$tableConfig->getName()][$collectColumn] = array();
         }
     }
 

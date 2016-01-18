@@ -175,12 +175,12 @@ class DataSelectorTest extends AbstractSqlTest
             ),
         ));
 
-        $collectedValues = array(
+        $harvestedValues = array(
             'Customer' => array(
                 'id' => array(10, 11, 12, 13),
             ),
         );
-        $query = $this->createSelectQueryBuilder($tableConfig, $table, $collectedValues)->getSQL();
+        $query = $this->createSelectQueryBuilder($tableConfig, $table, $harvestedValues)->getSQL();
 
         $expectedQuery = 'SELECT * FROM `Billing` t WHERE (`customer_id` IN (:param_0_0, :param_0_1, :param_0_2, :param_0_3)) OR (`customer_id` IS NULL)';
         $this->assertEquals($expectedQuery, $query);
@@ -189,11 +189,11 @@ class DataSelectorTest extends AbstractSqlTest
     /**
      * @param TableConfiguration $tableConfig
      * @param Table              $table
-     * @param array              $collectedValues
+     * @param array              $harvestedValues
      * @return QueryBuilder
      */
-    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
+    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $harvestedValues = array())
     {
-        return $this->createSelectQueryBuilder->invoke($this->dataSelector, $tableConfig, $table, $collectedValues);
+        return $this->createSelectQueryBuilder->invoke($this->dataSelector, $tableConfig, $table, $harvestedValues);
     }
 }

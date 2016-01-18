@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-use Digilist\SnakeDumper\Configuration\Table\DataDependentFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 
 class DumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
@@ -128,7 +128,7 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
         // a table depends on another table if a dependent filter is defined
         foreach ($this->tableConfigs as $table) {
             // if the dependent table is not configured, create a configuration
-            foreach ($table->getDependencies() as $dependency) {
+            foreach ($table->getDependentTables() as $dependency) {
                 if (!array_key_exists($dependency, $this->tableConfigs)) {
                     $this->tableConfigs[$dependency] = new TableConfiguration($dependency, array());
                 }

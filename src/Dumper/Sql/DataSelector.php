@@ -2,12 +2,14 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql;
 
-use Digilist\SnakeDumper\Configuration\Table\DataDependentFilter;
-use Digilist\SnakeDumper\Configuration\Table\DefaultFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\DefaultFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
+use InvalidArgumentException;
 
 /**
  * This class helps to query the appropriate data that should be dumped.
@@ -31,14 +33,14 @@ class DataSelector
     /**
      * @param TableConfiguration $tableConfig
      * @param Table              $table
-     * @param array              $collectedValues
+     * @param array              $harvestedValues
      *
      * @return \Doctrine\DBAL\Driver\Statement
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, $collectedValues)
+    public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, $harvestedValues)
     {
-        $qb = $this->createSelectQueryBuilder($tableConfig, $table, $collectedValues);
+        $qb = $this->createSelectQueryBuilder($tableConfig, $table, $harvestedValues);
 
         $query = $qb->getSQL();
         $parameters = $qb->getParameters();
@@ -63,17 +65,17 @@ class DataSelector
     /**
      * @param TableConfiguration $tableConfig
      * @param Table              $table
-     * @param array              $collectedValues
+     * @param array              $harvestedValues
      *
      * @return QueryBuilder
      */
-    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $collectedValues = array())
+    private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $harvestedValues = array())
     {
         $qb = $this->connection->createQueryBuilder()
             ->select('*')
             ->from($table->getQuotedName($this->connection->getDatabasePlatform()), 't');
 
-        $this->addFiltersToSelectQuery($qb, $tableConfig, $collectedValues);
+        $this->addFiltersToSelectQuery($qb, $tableConfig, $harvestedValues);
         if ($tableConfig->getLimit() != null) {
             $qb->setMaxResults($tableConfig->getLimit());
         }
@@ -89,14 +91,14 @@ class DataSelector
      *
      * @param QueryBuilder       $qb
      * @param TableConfiguration $tableConfig
-     * @param array              $collectedValues
+     * @param array              $harvestedValues
      */
-    private function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $collectedValues)
+    private function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $harvestedValues)
     {
         $paramIndex = 0;
         foreach ($tableConfig->getFilters() as $filter) {
             if ($filter instanceof DataDependentFilter) {
-                $this->handleDataDependentFilter($filter, $tableConfig, $collectedValues);
+                $this->handleDataDependentFilter($filter, $tableConfig, $harvestedValues);
             }
 
             $param = $this->bindParameters($qb, $filter, $paramIndex);
@@ -122,37 +124,44 @@ class DataSelector
     }
 
     /**
-     * Validates and modifies the data dependent filter to act like a IN-filter.
+     * Validates and modifies the data dependent filter to act like an IN-filter.
      *
      * @param DataDependentFilter $filter
      * @param TableConfiguration               $tableConfig
-     * @param array                            $collectedValues
+     * @param array                            $harvestedValues
      */
     private function handleDataDependentFilter(
         DataDependentFilter $filter,
         TableConfiguration $tableConfig,
-        array $collectedValues
+        array $harvestedValues
     ) {
-        if (!isset($collectedValues[$filter->getReferencedTable()])) {
-            throw new \InvalidArgumentException(
+        $tableName = $tableConfig->getName();
+        $referencedTable = $filter->getReferencedTable();
+        $referencedColumn = $filter->getReferencedColumn();
+
+        // Ensure the dependent table has been dumped before the current table
+        if (!isset($harvestedValues[$referencedTable])) {
+            throw new InvalidArgumentException(
                 sprintf(
                     'The table %s has not been dumped before %s',
-                    $filter->getReferencedTable(),
-                    $tableConfig->getName()
-                )
-            );
-        }
-        if (!isset($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()])) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'The column %s on table %s has not been dumped.',
-                    $filter->getReferencedTable(),
-                    $tableConfig->getName()
+                    $referencedTable,
+                    $tableName
                 )
             );
         }
 
-        $filter->setValue($collectedValues[$filter->getReferencedTable()][$filter->getReferencedColumn()]);
+        // Ensure the necessary column was included in the dump
+        if (!isset($harvestedValues[$referencedTable][$referencedColumn])) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'The column %s of table %s has not been dumped.',
+                    $referencedTable,
+                    $tableName
+                )
+            );
+        }
+
+        $filter->setValue($harvestedValues[$referencedTable][$referencedColumn]);
     }
 
     /**
@@ -160,15 +169,20 @@ class DataSelector
      *
      * This function returns false, if the condition is not fulfill-able and no row can be selected at all.
      *
-     * @param QueryBuilder        $qb
-     * @param DefaultFilter $filter
-     * @param int                 $paramIndex
+     * @param QueryBuilder    $qb
+     * @param FilterInterface $filter
+     * @param int             $paramIndex
      *
      * @return array|string|bool
      */
-    private function bindParameters(QueryBuilder $qb, DefaultFilter $filter, $paramIndex)
+    private function bindParameters(QueryBuilder $qb, FilterInterface $filter, $paramIndex)
     {
-        if ($filter->getOperator() === 'in' || $filter->getOperator() === 'notIn') {
+        $inOperator = in_array($filter->getOperator(), [
+            DefaultFilter::OPERATOR_IN,
+            DefaultFilter::OPERATOR_NOT_IN,
+        ]);
+
+        if ($inOperator) {
             // the IN and NOT IN operator expects an array which needs a different handling
             // -> each value in the array must be mapped to a single param
 

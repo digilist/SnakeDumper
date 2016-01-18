@@ -19,6 +19,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class DumpCommand extends Command
 {
+
     protected function configure()
     {
         $this

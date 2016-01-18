@@ -5,7 +5,7 @@ namespace Digilist\SnakeDumper\Dumper\Sql;
 use Digilist\DependencyGraph\DependencyGraph;
 use Digilist\DependencyGraph\DependencyNode;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\Table\DataDependentFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
@@ -83,13 +83,19 @@ class TableDependencyResolver
             $foreignTable = $foreignKey->getForeignTableName();
 
             $foreignTableConfig = $config->getTableConfig($foreignTable);
-            if ($foreignTableConfig->getLimit() > 0 || count($foreignTableConfig->getFilters()) > 0 ||
-                    $foreignTableConfig->getQuery() != null) {
-                $tableConfig->addFilter(new DataDependentFilter(array(
-                    'columnName' => $foreignKey->getColumns()[0],
-                    'referencedTable' => $foreignTable,
-                    'referencedColumn' => $foreignKey->getForeignColumns()[0],
-                )));
+            $hasDependency =
+                $foreignTableConfig->getLimit() > 0
+                || !empty($foreignTableConfig->getFilters())
+                || $foreignTableConfig->getQuery() != null;
+
+            if ($hasDependency) {
+                $tableConfig->addFilter(
+                    new DataDependentFilter(
+                        $foreignKey->getColumns()[0],
+                        $foreignTable,
+                        $foreignKey->getForeignColumns()[0]
+                    )
+                );
             }
         }
     }

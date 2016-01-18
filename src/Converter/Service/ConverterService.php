@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Converter\Service;
 
-use Digilist\SnakeDumper\Configuration\Table\ConverterConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\ConverterDefinition;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\ChainConverter;
 use Digilist\SnakeDumper\Converter\ConditionalConverter;
@@ -41,28 +41,27 @@ class ConverterService implements ConverterServiceInterface
     }
 
     /**
-     * This function creates the (chain) converter, according to the passed configurations.
+     * This function creates a single converter instance.
      *
-     * @param ConverterConfiguration[] $converterConfigurations
+     * @param ConverterDefinition $converterDefinition
      *
-     * @return ChainConverter|ConverterInterface|null
      * @throws InvalidConverterException
+     * @return ConverterInterface
      */
-    public static function createConverterFromConfig(array $converterConfigurations)
+    public static function createConverterInstance(ConverterDefinition $converterDefinition)
     {
-        $chainConverter = null;
-        if (count($converterConfigurations) > 1) {
-            $chainConverter = new ChainConverter();
-
-            foreach ($converterConfigurations as $converterConf) {
-                $converter = self::createConverterInstance($converterConf);
-                $chainConverter->addConverter($converter);
-            }
-
-            return $chainConverter;
+        $class = $converterDefinition->getFullQualifiedClassName();
+        if (!class_exists($class)) {
+            $message = sprintf('The converter "%s" (%s) does not exist.', $converterDefinition->getClassName(), $class);
+            throw new InvalidConverterException($message);
         }
 
-        return self::createConverterInstance($converterConfigurations[0]);
+        $parameters = $converterDefinition->getParameters();
+        if ($parameters !== null) {
+            return new $class($parameters);
+        }
+
+        return new $class();
     }
 
     /**
@@ -72,58 +71,26 @@ class ConverterService implements ConverterServiceInterface
      * @param string $key
      * @param ConverterInterface $converter
      */
-    protected function addConverter($key, ConverterInterface $converter)
+    protected function addConverter($key, ConverterInterface $converter, $allowChaining = false)
     {
         if (array_key_exists($key, $this->converters)) {
-            $message = sprintf(
-                'There is already a converter with key %s. Please provide a chain if there are multiple converters.',
-                $key
-            );
-            throw new \InvalidArgumentException($message);
+            if (!$allowChaining) {
+                $message = sprintf(
+                    'There is already a converter with key %s. Please provide a chain ' .
+                    'if there are multiple converters or allow chaining.',
+                    $key
+                );
+                throw new \InvalidArgumentException($message);
+            }
+
+            if ($this->converters[$key] instanceof ChainConverter) {
+                $this->converters[$key]->addConverter($converter);
+                return;
+            }
+
+            $converter = new ChainConverter([$converter]);
         }
 
         $this->converters[$key] = $converter;
-    }
-
-    /**
-     * This method helps to add the different converters.
-     * If there is only one converter, it will be added directly.
-     * If there are multiple converters they will be combined into a chain.
-     *
-     * @param string                   $key
-     * @param ConverterConfiguration[] $converterConfigurations
-     */
-    protected function addConvertersFromConfig($key, array $converterConfigurations)
-    {
-        if (count($converterConfigurations) == 0) {
-            return;
-        }
-
-        $converter = $this->createConverterFromConfig($converterConfigurations);
-        $this->addConverter($key, $converter);
-    }
-
-    /**
-     * This function creates a single converter instance.
-     *
-     * @param ConverterConfiguration $converterConf
-     *
-     * @throws InvalidConverterException
-     * @return ConverterInterface
-     */
-    protected static function createConverterInstance(ConverterConfiguration $converterConf)
-    {
-        $class = $converterConf->getFullQualifiedClassName();
-        if (!class_exists($class)) {
-            $message = sprintf('The converter "%s" (%s) does not exist.', $converterConf->getClassName(), $class);
-            throw new InvalidConverterException($message);
-        }
-
-        $parameters = $converterConf->getParameters();
-        if ($parameters !== null) {
-            return new $class($parameters);
-        }
-
-        return new $class();
     }
 }

@@ -15,7 +15,7 @@ class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
         $conditionalConverter = new ConditionalConverter([
             'condition' => '$title == ""',
             'if_true' => $ifTrue,
-        ], new ConverterService());
+        ]);
 
         $this->assertEquals($ifTrue, $conditionalConverter->convert('ABC', ['title' => '']));
         $this->assertEquals('ABC', $conditionalConverter->convert('ABC', ['title' => 'Not Empty']));
@@ -28,7 +28,7 @@ class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
         $conditionalConverter = new ConditionalConverter([
             'condition' => '$title == ""',
             'if_false' => $ifFalse,
-        ], new ConverterService());
+        ]);
 
         $this->assertEquals($ifFalse, $conditionalConverter->convert('ABC', ['title' => 'Not Empty']));
         $this->assertEquals('ABC', $conditionalConverter->convert('ABC', ['title' => '']));
@@ -43,7 +43,7 @@ class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
             'condition' => '$title == ""',
             'if_true' => $ifTrue,
             'if_false' => $ifFalse,
-        ], new ConverterService());
+        ]);
 
         $this->assertEquals($ifTrue, $conditionalConverter->convert('ABC', ['title' => '']));
         $this->assertEquals($ifFalse, $conditionalConverter->convert('ABC', ['title' => 'Not Empty']));
@@ -58,7 +58,7 @@ class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
             'condition' => '$title == ""',
             'if_true_converters' => $ifTrueConverters,
             'if_false_converters' => $ifFalseConverters,
-        ], new ConverterService());
+        ]);
 
         $this->assertEquals('barbar', $conditionalConverter->convert('foobar', ['title' => '']));
         $this->assertEquals('foofoo', $conditionalConverter->convert('foobar', ['title' => 'Not Empty']));

@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Configuration\Table;
 
-class ConverterConfiguration
+class ConverterDefinition
 {
 
     /**
@@ -16,21 +16,11 @@ class ConverterConfiguration
     private $parameters;
 
     /**
-     * @param string $className
-     * @param mixed $parameters
-     */
-    public function __construct($className, $parameters = null)
-    {
-        $this->className = $className;
-        $this->parameters = $parameters;
-    }
-
-    /**
      * Creates a new converter configuration, from string or array.
      *
      * @param null|array|string $converterDef
      *
-     * @return ConverterConfiguration
+     * @return ConverterDefinition
      */
     public static function factory($converterDef)
     {
@@ -44,7 +34,17 @@ class ConverterConfiguration
             $className = $converterDef;
         }
 
-        return new ConverterConfiguration($className, $parameter);
+        return new ConverterDefinition($className, $parameter);
+    }
+
+    /**
+     * @param string $className
+     * @param mixed $parameters
+     */
+    public function __construct($className, $parameters = null)
+    {
+        $this->className = $className;
+        $this->parameters = $parameters;
     }
 
     /**
@@ -74,6 +74,7 @@ class ConverterConfiguration
     public function setClassName($class)
     {
         $this->className = $class;
+
         return $this;
     }
 
@@ -83,5 +84,17 @@ class ConverterConfiguration
     public function getParameters()
     {
         return $this->parameters;
+    }
+
+    /**
+     * @param array $parameters
+     *
+     * @return $this
+     */
+    public function setParameters($parameters)
+    {
+        $this->parameters = $parameters;
+
+        return $this;
     }
 }
