@@ -63,7 +63,7 @@ class DataSelector
     {
         list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
 
-        $query = preg_replace('~^SELECT(.*?)FROM~msi', 'SELECT COUNT(*) FROM', $query);
+        $query = sprintf('SELECT COUNT(*) FROM (%s) AS tmp', $query);
 
         $result = $this->connection->prepare($query);
         $result->execute($parameters);

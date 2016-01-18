@@ -132,7 +132,6 @@ class SqlDumper extends AbstractDumper
                 continue;
             }
 
-            $this->logger->info('Dumping table ' . $table->getName());
             $this->dumpTableContent($tableConfig, $table);
 
             $progress->advance();
@@ -159,7 +158,7 @@ class SqlDumper extends AbstractDumper
         $insertColumns = null;
 
         $collectColumns = $tableConfig->getColumnsToHarvest();
-        $bufferSize = $this->config->getOutputConfig()->getRowsPerStatement();;
+        $bufferSize = $this->config->getOutputConfig()->getRowsPerStatement();
         $bufferCount = 0; // number of rows in buffer
         $buffer = array(); // array to buffer rows
 
@@ -167,7 +166,8 @@ class SqlDumper extends AbstractDumper
         $rowCount = $dataSelector->countRows($tableConfig, $table, $this->harvestedValues);
         $result = $dataSelector->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
 
-        $progress = $this->createProgressBar($rowCount, OutputInterface::VERBOSITY_VERBOSE);
+        $this->logger->info(sprintf('Dumping table %s (%d rows)', $table->getName(), $rowCount));
+        $progress = $this->createProgressBar($rowCount, OutputInterface::VERBOSITY_VERY_VERBOSE);
 
         foreach ($result as $row) {
             /*

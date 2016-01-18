@@ -41,7 +41,6 @@ interface DumperConfigurationInterface
      */
     public function getTableConfig($name);
 
-
     /**
      * @param TableConfiguration $tableConfig
      *

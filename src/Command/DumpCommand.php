@@ -26,6 +26,7 @@ class DumpCommand extends Command
             ->setName('dump')
             ->addArgument('config', InputArgument::REQUIRED, 'The path to your config file.')
             ->addOption('progress', null, InputOption::VALUE_NONE, 'Show a progress bar')
+            ->addOption('disable-limits', null, InputOption::VALUE_NONE, 'Create a full database dump')
             ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Override the configured password')
         ;
     }
@@ -96,6 +97,11 @@ class DumpCommand extends Command
     {
         if ($input->hasOption('password')) {
             $config->getDatabaseConfig()->setPassword($input->getOption('password'));
+        }
+        if ($input->getOption('disable-limits')) {
+            foreach ($config->getTableConfigs() as $tableConfig) {
+                $tableConfig->setLimit(null);
+            }
         }
     }
 }
