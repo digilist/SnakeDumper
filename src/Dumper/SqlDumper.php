@@ -15,10 +15,7 @@ use Doctrine\DBAL\Platforms\MySqlPlatform;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
 use PDO;
-use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class SqlDumper extends AbstractDumper
@@ -121,21 +118,9 @@ class SqlDumper extends AbstractDumper
         $this->connection->setFetchMode(PDO::FETCH_ASSOC);
         $this->connection->getWrappedConnection()->setAttribute(PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
-        $stream = new NullOutput();
-        if ($this->applicationInput->hasOption('progress') && $this->applicationInput->getOption('progress')) {
-            if ($this->applicationOutput instanceof ConsoleOutput) {
-                $stream = $this->applicationOutput->getErrorOutput();
-            }
-        }
-
-        $progress = new ProgressBar($stream, count($tables));
-        // add an additional space, in case logging is also enabled
-        $progress->setFormat($progress->getFormatDefinition('normal') . ' ');
-        $progress->start();
+        $progress = $this->createProgressBar(count($tables));
 
         foreach ($tables as $table) {
-            $progress->advance();
-
             $tableConfig = $this->config->getTableConfig($table->getName());
 
             $this->initValueHarvesting($tableConfig);
@@ -143,11 +128,14 @@ class SqlDumper extends AbstractDumper
             // check if table contents should be ignored
             if ($tableConfig->isContentIgnored()) {
                 $this->logger->info('Ignoring contents of table ' . $table->getName());
+                $progress->advance();
                 continue;
             }
 
             $this->logger->info('Dumping table ' . $table->getName());
             $this->dumpTableContent($tableConfig, $table);
+
+            $progress->advance();
         }
 
         $progress->finish();
@@ -176,7 +164,11 @@ class SqlDumper extends AbstractDumper
         $buffer = array(); // array to buffer rows
 
         $dataSelector = new DataSelector($this->connection);
+        $rowCount = $dataSelector->countRows($tableConfig, $table, $this->harvestedValues);
         $result = $dataSelector->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
+
+        $progress = $this->createProgressBar($rowCount, OutputInterface::VERBOSITY_VERBOSE);
+
         foreach ($result as $row) {
             /*
              * The following code (in this loop) will be executed for each dumped row!
@@ -224,6 +216,8 @@ class SqlDumper extends AbstractDumper
 
                 $this->dumpOutput->writeln($query);
 
+                $progress->advance($bufferCount);
+
                 $buffer = array();
                 $bufferCount = 0;
             }
@@ -235,6 +229,8 @@ class SqlDumper extends AbstractDumper
 
             $this->dumpOutput->writeln($query);
         }
+
+        $progress->finish();
     }
 
     /**

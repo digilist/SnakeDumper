@@ -31,6 +31,8 @@ class DataSelector
     }
 
     /**
+     * Executes the generated sql statement.
+     *
      * @param TableConfiguration $tableConfig
      * @param Table              $table
      * @param array              $harvestedValues
@@ -38,7 +40,47 @@ class DataSelector
      * @return \Doctrine\DBAL\Driver\Statement
      * @throws \Doctrine\DBAL\DBALException
      */
-    public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, $harvestedValues)
+    public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, array $harvestedValues)
+    {
+        list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
+
+        $result = $this->connection->prepare($query);
+        $result->execute($parameters);
+
+        return $result;
+    }
+
+    /**
+     * Count the number of rows for the generated select statement.
+     *
+     * @param TableConfiguration $tableConfig
+     * @param Table              $table
+     * @param array              $harvestedValues
+     *
+     * @return int
+     */
+    public function countRows(TableConfiguration $tableConfig, Table $table, array $harvestedValues)
+    {
+        list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
+
+        $query = preg_replace('~^SELECT(.*?)FROM~msi', 'SELECT COUNT(*) FROM', $query);
+
+        $result = $this->connection->prepare($query);
+        $result->execute($parameters);
+
+        return (int) $result->fetchAll()[0]['COUNT(*)'];
+    }
+
+    /**
+     * This method creates the actual select statements and binds the parameters.
+     *
+     * @param TableConfiguration $tableConfig
+     * @param Table              $table
+     * @param array              $harvestedValues
+     *
+     * @return array
+     */
+    private function buildSelectQuery(TableConfiguration $tableConfig, Table $table, $harvestedValues)
     {
         $qb = $this->createSelectQueryBuilder($tableConfig, $table, $harvestedValues);
 
@@ -56,10 +98,7 @@ class DataSelector
             }
         }
 
-        $result = $this->connection->prepare($query);
-        $result->execute($parameters);
-
-        return $result;
+        return [trim($query), $parameters];
     }
 
     /**
