@@ -25,7 +25,8 @@ class DumpCommand extends Command
         $this
             ->setName('dump')
             ->addArgument('config', InputArgument::REQUIRED, 'The path to your config file.')
-            ->addOption('progress', 'p', InputOption::VALUE_NONE, 'Show a progress bar')
+            ->addOption('progress', null, InputOption::VALUE_NONE, 'Show a progress bar')
+            ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Override the configured password')
         ;
     }
 
@@ -39,6 +40,11 @@ class DumpCommand extends Command
         $dumper->dump();
     }
 
+    /**
+     * @param InputInterface $input
+     *
+     * @return DumperConfiguration
+     */
     private function parseConfig(InputInterface $input)
     {
         $configArg = $input->getArgument('config');
@@ -58,7 +64,10 @@ class DumpCommand extends Command
         $configuration = new SnakeConfigurationTree();
         $processed = $processor->processConfiguration($configuration, array($config));
 
-        return new DumperConfiguration($processed);
+        $config = new DumperConfiguration($processed);
+        $this->overrideConfigs($config, $input);
+
+        return $config;
     }
 
     /**
@@ -75,5 +84,18 @@ class DumpCommand extends Command
         }
 
         return new StreamOutput(fopen($config->getOutputConfig()->getFile(), 'w'));
+    }
+
+    /**
+     * Override some variables in the config with parameters from the command line.
+     *
+     * @param DumperConfigurationInterface $config
+     * @param InputInterface               $input
+     */
+    private function overrideConfigs(DumperConfigurationInterface $config, InputInterface $input)
+    {
+        if ($input->hasOption('password')) {
+            $config->getDatabaseConfig()->setPassword($input->getOption('password'));
+        }
     }
 }
