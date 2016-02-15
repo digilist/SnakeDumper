@@ -63,6 +63,11 @@ class DataSelector
     {
         list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
 
+        // Remove everything before the first FROM, to replace it with a SELECT 1
+        $query = 'SELECT 1 ' . substr($query, stripos($query, 'FROM'));
+
+        // The actual select is wrapped in a subquery, to consider groupings, limits etc.
+        // We only want to get the number of rows that will be dumped later.
         $query = sprintf('SELECT COUNT(*) FROM (%s) AS tmp', $query);
 
         $result = $this->connection->prepare($query);
