@@ -6,7 +6,6 @@ use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\DefaultFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
@@ -18,16 +17,16 @@ class DataSelector
 {
 
     /**
-     * @var Connection
+     * @var ConnectionHandler
      */
-    private $connection;
+    private $connectionHandler;
 
     /**
-     * @param Connection $connection
+     * @param ConnectionHandler $connectionHandler
      */
-    public function __construct(Connection $connection)
+    public function __construct(ConnectionHandler $connectionHandler)
     {
-        $this->connection = $connection;
+        $this->connectionHandler = $connectionHandler;
     }
 
     /**
@@ -44,7 +43,7 @@ class DataSelector
     {
         list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
 
-        $result = $this->connection->prepare($query);
+        $result = $this->connectionHandler->getConnection()->prepare($query);
         $result->execute($parameters);
 
         return $result;
@@ -70,7 +69,7 @@ class DataSelector
         // We only want to get the number of rows that will be dumped later.
         $query = sprintf('SELECT COUNT(*) FROM (%s) AS tmp', $query);
 
-        $result = $this->connection->prepare($query);
+        $result = $this->connectionHandler->getConnection()->prepare($query);
         $result->execute($parameters);
 
         return (int) $result->fetchAll()[0]['COUNT(*)'];
@@ -115,9 +114,9 @@ class DataSelector
      */
     private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $harvestedValues = array())
     {
-        $qb = $this->connection->createQueryBuilder()
+        $qb = $this->connectionHandler->getConnection()->createQueryBuilder()
             ->select('*')
-            ->from($table->getQuotedName($this->connection->getDatabasePlatform()), 't');
+            ->from($table->getQuotedName($this->connectionHandler->getPlatform()), 't');
 
         $this->addFiltersToSelectQuery($qb, $tableConfig, $harvestedValues);
         if ($tableConfig->getLimit() != null) {
@@ -147,7 +146,7 @@ class DataSelector
 
             $param = $this->bindParameters($qb, $filter, $paramIndex);
             $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
-                $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName()),
+                $this->connectionHandler->getPlatform()->quoteIdentifier($filter->getColumnName()),
                 $param
             ));
 
@@ -156,7 +155,7 @@ class DataSelector
                 $expr = $qb->expr()->orX(
                     $expr,
                     $qb->expr()->isNull(
-                        $this->connection->getDatabasePlatform()->quoteIdentifier($filter->getColumnName())
+                        $this->connectionHandler->getPlatform()->quoteIdentifier($filter->getColumnName())
                     )
                 );
             }

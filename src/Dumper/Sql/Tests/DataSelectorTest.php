@@ -2,7 +2,9 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
+use Digilist\SnakeDumper\Configuration\DatabaseConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
@@ -27,7 +29,7 @@ class DataSelectorTest extends AbstractSqlTest
     {
         parent::setUp();
 
-        $this->dataSelector = new DataSelector($this->connection);
+        $this->dataSelector = new DataSelector(new ConnectionHandler(new DatabaseConfiguration(), $this->connection));
 
         $refl = new \ReflectionObject($this->dataSelector);
         $createSelectQueryBuilder = $refl->getMethod('createSelectQueryBuilder');

@@ -58,24 +58,7 @@ class ConnectionHandler
             return $this->connection;
         }
 
-        $connectionParams = array(
-            'driver'   => $this->config->getDriver(),
-            'host'     => $this->config->getHost(),
-            'user'     => $this->config->getUser(),
-            'password' => $this->config->getPassword(),
-            'dbname'   => $this->config->getDatabaseName(),
-            'charset'  => $this->config->getCharset(),
-        );
-
-        $dbalConfig = new Configuration();
-        $this->connection = DriverManager::getConnection($connectionParams, $dbalConfig);
-        $this->connection->connect();
-
-        $this->initPlatformAdjustment($this->connection);
-        $this->platformAdjustment->initConnection();
-        $this->platformAdjustment->registerCustomTypeMappings();
-
-        return $this->connection;
+        return $this->connect();
     }
 
     /**
@@ -88,7 +71,7 @@ class ConnectionHandler
     {
         if (!$this->connection->ping()) {
             $this->connection->close();
-            $this->connect()->connect();
+            $this->connect();
         }
     }
 
@@ -118,6 +101,34 @@ class ConnectionHandler
     public function getPlatformAdjustment()
     {
         return $this->platformAdjustment;
+    }
+
+    /**
+     * Open the database connection.
+     *
+     * @return Connection
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    private function connect()
+    {
+        $connectionParams = array(
+            'driver'   => $this->config->getDriver(),
+            'host'     => $this->config->getHost(),
+            'user'     => $this->config->getUser(),
+            'password' => $this->config->getPassword(),
+            'dbname'   => $this->config->getDatabaseName(),
+            'charset'  => $this->config->getCharset(),
+        );
+
+        $dbalConfig = new Configuration();
+        $this->connection = DriverManager::getConnection($connectionParams, $dbalConfig);
+        $this->connection->connect();
+
+        $this->initPlatformAdjustment($this->connection);
+        $this->platformAdjustment->initConnection();
+        $this->platformAdjustment->registerCustomTypeMappings();
+
+        return $this->connection;
     }
 
     /**

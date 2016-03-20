@@ -78,7 +78,7 @@ class TableContentsDumper
         $this->progressBarHelper = $progressBarHelper;
         $this->logger = $logger;
 
-        $this->dataSelector = new DataSelector($this->connectionHandler->getConnection());
+        $this->dataSelector = new DataSelector($this->connectionHandler);
     }
 
     /**
