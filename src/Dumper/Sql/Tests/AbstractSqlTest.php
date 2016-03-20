@@ -26,8 +26,8 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         // As there is currently no Foreign Key Support for SQLite in Doctrine DBAL, we cannot use SQLite for testing...
-        // see http://www.doctrine-project.org/jira/browse/DBAL-1065
-        // and http://www.doctrine-project.org/jira/browse/DBAL-866
+        // see https://github.com/doctrine/dbal/issues/999
+        // and https://github.com/doctrine/dbal/issues/2104
 
 //        $pdo = new \PDO('sqlite::memory:');
 //        $pdo->query('PRAGMA foreign_keys=ON;');
@@ -36,7 +36,7 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         $this->connection = DriverManager::getConnection(array(
             'user'     => 'root',
             'password' => '',
-            'host'     => 'localhost',
+            'host'     => '127.0.0.1',
             'driver'   => 'pdo_mysql',
         ));
 

@@ -25,7 +25,9 @@ interface DumperInterface
     );
 
     /**
-     * @return mixed
+     * This function starts the dump process.
+     *
+     * @return void
      */
     public function dump();
 

@@ -54,7 +54,7 @@ class TableDependencyResolver
 
         foreach ($tables as $table) {
             foreach ($table->getForeignKeys() as $foreignKey) {
-                // TODO
+                // TODO foreign key pointing to own table not supported yet
                 if ($foreignKey->getForeignTableName() == $table->getName()) {
                     continue;
                 }

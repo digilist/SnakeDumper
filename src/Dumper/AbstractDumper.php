@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
+use Digilist\SnakeDumper\Dumper\Helper\ProgressBarHelper;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -45,7 +46,12 @@ abstract class AbstractDumper implements DumperInterface
     /**
      * @var ConverterServiceInterface
      */
-    private $converterService;
+    protected $converterService;
+
+    /**
+     * @var ProgressBarHelper
+     */
+    protected $progressBarHelper;
 
     /**
      * @param DumperConfigurationInterface $config
@@ -60,8 +66,8 @@ abstract class AbstractDumper implements DumperInterface
         OutputInterface $applicationOutput
     ) {
         $this->config = $config;
-        $this->applicationOutput = $applicationOutput;
         $this->applicationInput = $applicationInput;
+        $this->applicationOutput = $applicationOutput;
         $this->dumpOutput = $dumpOutput;
 
         if ($applicationOutput->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE) {
@@ -70,6 +76,8 @@ abstract class AbstractDumper implements DumperInterface
         } else {
             $this->logger = new NullLogger();
         }
+
+        $this->progressBarHelper = new ProgressBarHelper($applicationInput, $applicationOutput);;
     }
 
     /**
@@ -81,18 +89,6 @@ abstract class AbstractDumper implements DumperInterface
     }
 
     /**
-     * @param string  $key
-     * @param string  $value
-     * @param array   $context
-     *
-     * @return mixed
-     */
-    protected function convert($key, $value, array $context = array())
-    {
-        return $this->converterService->convert($key, $value, $context);
-    }
-
-    /**
      * @param int $count
      * @param int $minVerbosity
      *
@@ -100,20 +96,6 @@ abstract class AbstractDumper implements DumperInterface
      */
     protected function createProgressBar($count, $minVerbosity = OutputInterface::VERBOSITY_NORMAL)
     {
-        $stream = new NullOutput();
-        if ($this->applicationInput->hasOption('progress') && $this->applicationInput->getOption('progress')) {
-            if ($this->applicationOutput instanceof ConsoleOutput) {
-                if ($this->applicationOutput->getVerbosity() >= $minVerbosity) {
-                    $stream = $this->applicationOutput->getErrorOutput();
-                }
-            }
-        }
-
-        $progress = new ProgressBar($stream, $count);
-        // add an additional space, in case logging is also enabled
-        $progress->setFormat($progress->getFormatDefinition('normal') . ' ');
-        $progress->start();
-
-        return $progress;
+        return $this->progressBarHelper->createProgressBar($count, $minVerbosity);
     }
 }
