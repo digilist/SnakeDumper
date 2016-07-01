@@ -1,34 +1,49 @@
 # SnakeDumper
-SnakeDumper is a tool to create reasonable development dumps of your production database **which do not contain any personal data**. It works similar to mysqldumper (or related tools), but applies a set of data converters and filters to your data. (If no filters and converteres are used, it works exactly like any other database dumper.)
+SnakeDumper is a tool to create a reasonable development dump of your production database **which does not contain any personal data**. It works similar to mysqldumper (or related tools), but applies a set of data converters and filters to your data. (If there aren't any filters and converteres configured it works exactly like any other dumper.)
 
-_Please note that the SnakeDumper is currently in an early preview phase. It is written to work with any SQL-compatible database, but is at the moment only tested against MySQL and SQLite._
+_Please note that the SnakeDumper is currently in an early preview phase. It is written to work with any SQL-compatible database, but is at the moment only tested against MySQL and SQLite._ The vision is to support a wide range of database systems later (including NoSQL).
 
 ## Features
-- Create an SQL Dump of your production database **without personal data**
-- **Data converters** remove / change personal data to
-  - a random first name, last name
-  - an empty string
-  - NULL
-  - fixed Value
-  - etc.
-- **Data filters** help to keep your development database small
-  - Regular **SQL Conditions** (equals, unequals, lower than, ...)
-  - Order of the result set (to select for example only the latest entries)
-  - Limit the number of rows
-  - SnakeDumper ensures the referential integrity of the database dump (e.g. if only the latest 100 customers should be dumped, SnakeDumper will only dump their billings but not the billings of other customers)
-  - Or define a custom query for more advanced use cases (e.g. you want to change the table structure of the development dump)
-- Dump only a set of white listed tables or ignore single tables
-- Ignore the contents of specific tables (dump only the table structure)
+
+### Filter
+SnakeDumper allows to filter the data that will be dumped to keep the development database small. Therefore, there are various filters, that can be applied before the data is loaded from the database.
+
+You can
+- apply regular SQL conditions (equals, unequals, lower than, ...),
+- limit the number of rows,
+- change the order of the selected rows (e.g. to select only the latest entries),
+- and apply a custom SQL to be fully flexible.
+
+If you apply those filters, SnakeDumper will keep the referential integrity of your database dump so that all foreign keys stay valid. All rows  that have references on rows that were excluded from the dump will be skipped. Example: There is a table with customers and billings. You decide that you only want to dump the latest 100 customers. SnakeDumper will then automatically dump only those billings that belong to the considered customers.
+
+Furthermore, you can configure SnakeDumper to skip whole tables or the contents of some tables.
+
+### Data Converter
+
+The main objective of the SnakeDumper is to build reasonable development dumps that do not contain any personal data. Therefore, there are are various data converts that allow to alter the dumped data and replace all personal information with other random (or static) data.
+
+There are already a lot of converters. Here are just a few examples:
+- Random first and last name
+- Random company names
+- Random number
+- Empty string
+- Static value
+
+And generally, you can use anything that is offered by the awesome faker library.
 
 ## Installation
-You can install the SnakeDumper with Composer (`digilist/snakedumper`).
+You can install the SnakeDumper with Composer (`digilist/snakedumper`) or download the phar: http://digilist.de/snakedumper.phar
 
 ## Usage
-To use the SnakeDumper you have to create a configuration file which defines how to convert your database (see Example Configuration). You can run SnakeDumper with the following command:
+To use the SnakeDumper you have to create a configuration file which defines how to convert your database (see Example Configuration). You can run SnakeDumper with one of the following commands (depending on your installation method):
 
 ```
 php bin/snakedumper dump ./demo.yml
 ```
+```
+php snakedumper.phar dump ./demo.yml
+```
+
 
 ### Example Configuration
 There are a lot of configuration options for the SnakeDumper available. The best way to get started is by looking at the example configuration file ([demo.yml](demo.yml)). For other available options, please take a look at the [docs/](docs).
@@ -37,7 +52,7 @@ There are a lot of configuration options for the SnakeDumper available. The best
 Please note that some configuration parameters are passed directly to the database server. Although this tool does not perform any changes on your data, it is still possible to alter your data with invalid configuration parameters (e.g. by defining a custom query which performs updates). So please do not configure this tool with any kind of user provided data! We do not perform any security checks at the moment! Use it at your own risk, we give absolutely no warranty.
 
 ## How to contribute
-We are option for every type of contribution. You can test the SnakeDumper, report bugs, propose new features or help us with the development. Feel free to create a new issue or open a pull request :-)
+We are option for every type of contribution. You can test the SnakeDumper, report bugs, propose new features or help us with the development. Feel free to create a new issue or open a pull request :smiley:
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE) for more information.
