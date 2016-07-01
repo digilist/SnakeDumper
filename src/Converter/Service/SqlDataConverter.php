@@ -4,30 +4,25 @@ namespace Digilist\SnakeDumper\Converter\Service;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
 
-class SqlConverterService extends ConverterService
+class SqlDataConverter extends DataConverter
 {
 
     /**
-     * Read the configuration and create the converter service.
+     * Create a new SqlDataConvert by reading the configuration and adding converters for the sql dumper.
      *
      * @param DumperConfigurationInterface $config
-     * @return static
      */
-    public static function createFromConfig(DumperConfigurationInterface $config)
+    public function __construct(DumperConfigurationInterface $config)
     {
-        $converterService = new static();
-
         foreach ($config->getTableConfigs() as $tableName => $tableConfig) {
             foreach ($tableConfig->getConverters() as $columnName => $converterDefinitions) {
                 $key = sprintf('%s.%s', $tableName, $columnName);
 
                 foreach ($converterDefinitions as $converterDefinition) {
-                    $converter = $converterService->createConverterInstance($converterDefinition);
-                    $converterService->addConverter($key, $converter, true);
+                    $converter = $this->createConverterInstance($converterDefinition);
+                    $this->addConverter($key, $converter, true);
                 }
             }
         }
-
-        return $converterService;
     }
 }

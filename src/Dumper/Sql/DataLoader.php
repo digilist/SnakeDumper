@@ -13,7 +13,7 @@ use InvalidArgumentException;
 /**
  * This class helps to query the appropriate data that should be dumped.
  */
-class DataSelector
+class DataLoader
 {
 
     /**

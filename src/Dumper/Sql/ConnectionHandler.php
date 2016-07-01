@@ -34,15 +34,14 @@ class ConnectionHandler
      * ConnectionHandler constructor.
      *
      * @param DatabaseConfiguration $config
-     * @param Connection|null       $connection
      */
-    public function __construct(DatabaseConfiguration $config, Connection $connection = null)
+    public function __construct(DatabaseConfiguration $config)
     {
         $this->config = $config;
-        $this->connection = $connection;
 
-        if ($connection !== null) {
-            $this->initPlatformAdjustment($connection);
+        if ($config->getConnection() !== null) {
+            $this->connection = $config->getConnection();
+            $this->initPlatformAdjustment($this->connection);
         }
     }
 

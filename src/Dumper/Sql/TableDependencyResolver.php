@@ -17,7 +17,7 @@ class TableDependencyResolver
 {
 
     /**
-     * Supplement table configs with dependencies that were resolved from the database.
+     * Add found dependencies into the table configs.
      *
      * @param Table[] $tables
      * @param DumperConfigurationInterface $config
@@ -33,7 +33,7 @@ class TableDependencyResolver
     }
 
     /**
-     * Brings the table into an order which respects dependencies betweem them.
+     * Brings the table into an order which respects dependencies between them.
      *
      * @param Table[] $tables
      *
@@ -54,7 +54,7 @@ class TableDependencyResolver
 
         foreach ($tables as $table) {
             foreach ($table->getForeignKeys() as $foreignKey) {
-                // TODO foreign key pointing to own table not supported yet
+                // TODO foreign keys pointing to own table not supported yet
                 if ($foreignKey->getForeignTableName() == $table->getName()) {
                     continue;
                 }
@@ -71,6 +71,9 @@ class TableDependencyResolver
     }
 
     /**
+     * Find dependencies on other tables in the given foreign keys and add those dependencies as filters to the
+     * table configuration.
+     *
      * @param ForeignKeyConstraint[]       $foreignKeys
      * @param TableConfiguration           $tableConfig
      * @param DumperConfigurationInterface $config
@@ -80,19 +83,19 @@ class TableDependencyResolver
     private function findDependencies(array $foreignKeys, TableConfiguration $tableConfig, DumperConfigurationInterface $config)
     {
         foreach ($foreignKeys as $foreignKey) {
-            $foreignTable = $foreignKey->getForeignTableName();
+            $referencedTable = $foreignKey->getForeignTableName();
 
-            $foreignTableConfig = $config->getTableConfig($foreignTable);
+            $referencedTableConfig = $config->getTableConfig($referencedTable);
             $hasDependency =
-                $foreignTableConfig->getLimit() > 0
-                || !empty($foreignTableConfig->getFilters())
-                || $foreignTableConfig->getQuery() != null;
+                $referencedTableConfig->getLimit() > 0
+                || !empty($referencedTableConfig->getFilters())
+                || $referencedTableConfig->getQuery() != null;
 
             if ($hasDependency) {
                 $tableConfig->addFilter(
                     new DataDependentFilter(
                         $foreignKey->getColumns()[0],
-                        $foreignTable,
+                        $referencedTable,
                         $foreignKey->getForeignColumns()[0]
                     )
                 );

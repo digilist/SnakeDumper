@@ -4,8 +4,8 @@ namespace Digilist\SnakeDumper\Converter;
 
 use Digilist\SnakeDumper\Configuration\Table\ConverterDefinition;
 use Digilist\SnakeDumper\Converter\Helper\VariableParserHelper;
-use Digilist\SnakeDumper\Converter\Service\ConverterService;
-use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
+use Digilist\SnakeDumper\Converter\Service\DataConverter;
+use Digilist\SnakeDumper\Converter\Service\DataConverterInterface;
 use Digilist\SnakeDumper\Exception\InvalidArgumentException;
 
 class ConditionalConverter implements ConverterInterface
@@ -113,7 +113,7 @@ class ConditionalConverter implements ConverterInterface
         $converters = [];
         foreach ($converterDefinitions as $definition) {
             $converterDefinition = ConverterDefinition::factory($definition);
-            $converters[] = ConverterService::createConverterInstance($converterDefinition);
+            $converters[] = DataConverter::createConverterInstance($converterDefinition);
         }
 
         if (count($converters) > 1) {

@@ -5,17 +5,17 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 use Digilist\SnakeDumper\Configuration\DatabaseConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
-use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
+use Digilist\SnakeDumper\Dumper\Sql\DataLoader;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 
-class DataSelectorTest extends AbstractSqlTest
+class DataLoaderTest extends AbstractSqlTest
 {
 
     /**
-     * @var DataSelector
+     * @var DataLoader
      */
-    private $dataSelector;
+    private $dataLoader;
 
     /**
      * @var \ReflectionMethod
@@ -29,9 +29,10 @@ class DataSelectorTest extends AbstractSqlTest
     {
         parent::setUp();
 
-        $this->dataSelector = new DataSelector(new ConnectionHandler(new DatabaseConfiguration(), $this->connection));
+        $dbConfig = new DatabaseConfiguration(['connection' => $this->connection]);
+        $this->dataLoader = new DataLoader(new ConnectionHandler($dbConfig));
 
-        $refl = new \ReflectionObject($this->dataSelector);
+        $refl = new \ReflectionObject($this->dataLoader);
         $createSelectQueryBuilder = $refl->getMethod('createSelectQueryBuilder');
         $createSelectQueryBuilder->setAccessible(true);
 
@@ -196,6 +197,6 @@ class DataSelectorTest extends AbstractSqlTest
      */
     private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $harvestedValues = array())
     {
-        return $this->createSelectQueryBuilder->invoke($this->dataSelector, $tableConfig, $table, $harvestedValues);
+        return $this->createSelectQueryBuilder->invoke($this->dataLoader, $tableConfig, $table, $harvestedValues);
     }
 }

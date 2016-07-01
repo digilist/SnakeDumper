@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
-use Digilist\SnakeDumper\Configuration\DumperConfiguration;
+use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\IdentifierQuoter;
 use Digilist\SnakeDumper\Dumper\Sql\TableSelector;
@@ -18,7 +18,7 @@ class TableSelectorTest extends AbstractSqlTest
     public function testWithoutTables()
     {
         $tableSelector = new TableSelector($this->connection);
-        $this->assertEquals(array(), $tableSelector->selectTables(new DumperConfiguration()));
+        $this->assertEquals(array(), $tableSelector->findTablesToDump(new SqlDumperConfiguration()));
     }
 
     /**
@@ -31,7 +31,7 @@ class TableSelectorTest extends AbstractSqlTest
         $tableSelector = new TableSelector($this->connection);
         $this->createTestSchema();
 
-        $tables = $tableSelector->selectTables(new DumperConfiguration());
+        $tables = $tableSelector->findTablesToDump(new SqlDumperConfiguration());
 
         $this->assertEquals(2, count($tables));
 

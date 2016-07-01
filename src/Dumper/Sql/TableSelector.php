@@ -8,7 +8,11 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 
 /**
- * This class helps to find the available tables which should be dumped.
+ * This class helps to find the tables that should be dumped.
+ *
+ * It identifies all tables in the database and excludes those which have been ignored in the configuration.
+ * Furthermore, it identifies dependencies between tables (through foreign keys) and adds those dependencies
+ * into the configuration.
  */
 class TableSelector
 {
@@ -22,6 +26,7 @@ class TableSelector
      * @var IdentifierQuoter
      */
     private $identifierQuoter;
+
     /**
      * @var TableDependencyResolver
      */
@@ -33,7 +38,7 @@ class TableSelector
     public function __construct(Connection $connection)
     {
         $this->connection = $connection;
-        $this->identifierQuoter = new IdentifierQuoter($this->connection);
+        $this->identifierQuoter = new IdentifierQuoter($connection);
         $this->tableDependencyResolver = new TableDependencyResolver();
     }
 
@@ -45,7 +50,7 @@ class TableSelector
      *
      * @return \Doctrine\DBAL\Schema\Table[]
      */
-    public function selectTables(DumperConfigurationInterface $config)
+    public function findTablesToDump(DumperConfigurationInterface $config)
     {
         $schemaManager = $this->connection->getSchemaManager();
 

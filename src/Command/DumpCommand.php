@@ -3,18 +3,16 @@
 namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\DumperConfiguration;
+use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
+use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
-use Digilist\SnakeDumper\Output\GzipStreamOutput;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Output\StreamOutput;
 use Symfony\Component\Yaml\Yaml;
 
 class DumpCommand extends Command
@@ -31,20 +29,31 @@ class DumpCommand extends Command
         ;
     }
 
+    /**
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     *
+     * @return int|null|void
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $config = $this->parseConfig($input);
+        $context = new SqlDumperContext(
+            $config,
+            $input,
+            $output
+        );
 
         /** @var DumperInterface $dumper */
         $class = $config->getFullQualifiedDumperClassName();
-        $dumper = new $class($config, $this->getOutputStream($config), $input, $output);
-        $dumper->dump();
+        $dumper = new $class();
+        $dumper->dump($context);
     }
 
     /**
      * @param InputInterface $input
      *
-     * @return DumperConfiguration
+     * @return SqlDumperConfiguration
      */
     private function parseConfig(InputInterface $input)
     {
@@ -59,32 +68,16 @@ class DumpCommand extends Command
             throw new \InvalidArgumentException('Cannot find configuration file: ' . $configArg);
         }
 
-        $config = Yaml::parse($configFile);
+        $config = Yaml::parse(file_get_contents($configFile));
 
         $processor = new Processor();
         $configuration = new SnakeConfigurationTree();
         $processed = $processor->processConfiguration($configuration, array($config));
 
-        $config = new DumperConfiguration($processed);
+        $config = new SqlDumperConfiguration($processed);
         $this->overrideConfigs($config, $input);
 
         return $config;
-    }
-
-    /**
-     * Returns the target output interface for the dump.
-     *
-     * @param DumperConfigurationInterface $config
-     *
-     * @return Output
-     */
-    private function getOutputStream(DumperConfigurationInterface $config)
-    {
-        if ($config->getOutputConfig()->getGzip()) {
-            return new GzipStreamOutput(gzopen($config->getOutputConfig()->getFile(), 'w'));
-        }
-
-        return new StreamOutput(fopen($config->getOutputConfig()->getFile(), 'w'));
     }
 
     /**

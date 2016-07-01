@@ -3,7 +3,10 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
+use Digilist\SnakeDumper\Converter\Service\DataConverterInterface;
+use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
+use Digilist\SnakeDumper\Dumper\Context\DumperContextInterface;
+use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -12,27 +15,13 @@ interface DumperInterface
 {
 
     /**
-     * @param DumperConfigurationInterface $config
-     * @param OutputInterface              $dumpOutput
-     * @param InputInterface               $applicationInput
-     * @param OutputInterface              $applicationOutput
-     */
-    public function __construct(
-        DumperConfigurationInterface $config,
-        OutputInterface $dumpOutput,
-        InputInterface $applicationInput,
-        OutputInterface $applicationOutput
-    );
-
-    /**
      * This function starts the dump process.
+     *
+     * The passed context contains all information that are necessary to create the dump.
+     *
+     * @param DumperContextInterface $context
      *
      * @return void
      */
-    public function dump();
-
-    /**
-     * @param ConverterServiceInterface $dumper
-     */
-    public function setConverterService(ConverterServiceInterface $dumper);
+    public function dump(DumperContextInterface $context);
 }

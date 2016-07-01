@@ -2,8 +2,9 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
-use Digilist\SnakeDumper\Configuration\DumperConfiguration;
-use Digilist\SnakeDumper\Converter\Service\SqlConverterService;
+use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
+use Digilist\SnakeDumper\Converter\Service\SqlDataConverter;
+use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
 use Digilist\SnakeDumper\Dumper\SqlDumper;
 use Psr\Log\NullLogger;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -19,7 +20,10 @@ class SqlDumperTest extends AbstractSqlTest
         $this->createTestSchema(true);
 
         $output = new TestOutput();
-        $config = new DumperConfiguration(array(
+        $config = new SqlDumperConfiguration(array(
+            'database' => [
+                'connection' => $this->connection,
+            ],
             'output' => array(
                 'rowsPerStatement' => 3,
             ),
@@ -50,14 +54,11 @@ class SqlDumperTest extends AbstractSqlTest
             ),
         ));
 
-        $dumper = new SqlDumper(
-            $config,
-            $output,
-            new StringInput(''),
-            new NullOutput(),
-            $this->connection
-        );
-        $dumper->dump();
+        $context = new SqlDumperContext($config, new StringInput(''), new NullOutput());
+        $context->setDumpOutput($output);
+
+        $dumper = new SqlDumper();
+        $dumper->dump($context);
 
         $dump = $output->output;
         $this->assertEquals(file_get_contents(__DIR__ . '/test_dump.sql'), $dump);

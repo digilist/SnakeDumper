@@ -3,10 +3,11 @@
 namespace Digilist\SnakeDumper\Dumper\Sql\Dumper;
 
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
-use Digilist\SnakeDumper\Converter\Service\ConverterServiceInterface;
+use Digilist\SnakeDumper\Converter\Service\DataConverterInterface;
+use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
 use Digilist\SnakeDumper\Dumper\Helper\ProgressBarHelper;
 use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
-use Digilist\SnakeDumper\Dumper\Sql\DataSelector;
+use Digilist\SnakeDumper\Dumper\Sql\DataLoader;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
@@ -16,14 +17,19 @@ class TableContentsDumper
 {
 
     /**
+     * @var SqlDumperContext
+     */
+    private $context;
+
+    /**
      * @var ConnectionHandler
      */
     private $connectionHandler;
 
     /**
-     * @var ConverterServiceInterface
+     * @var DataConverterInterface
      */
-    private $converterService;
+    private $dataConverter;
 
     /**
      * @var OutputInterface
@@ -31,19 +37,14 @@ class TableContentsDumper
     private $dumpOutput;
 
     /**
-     * @var int
-     */
-    private $rowsPerStatement;
-
-    /**
-     * @var ProgressBarHelper
-     */
-    private $progressBarHelper;
-
-    /**
      * @var LoggerInterface
      */
     private $logger;
+
+    /**
+     * @var DataLoader
+     */
+    private $dataLoader;
 
     /**
      * @var array
@@ -51,37 +52,21 @@ class TableContentsDumper
     private $harvestedValues = [];
 
     /**
-     * @var DataSelector
+     * @param SqlDumperContext $context
      */
-    private $dataSelector;
+    public function __construct(SqlDumperContext $context) {
+        $this->context = $context;
+        $this->connectionHandler = $context->getConnectionHandler();
+        $this->dataConverter = $context->getDataConverter();
+        $this->dumpOutput = $context->getDumpOutput();
+        $this->logger = $context->getLogger();
 
-    /**
-     * @param ConnectionHandler         $connectionHandler
-     * @param ConverterServiceInterface $converterService
-     * @param OutputInterface           $dumpOutput
-     * @param                           $rowsPerStatement
-     * @param ProgressBarHelper         $progressBarHelper
-     * @param LoggerInterface           $logger
-     */
-    public function __construct(
-        ConnectionHandler $connectionHandler,
-        ConverterServiceInterface $converterService,
-        OutputInterface $dumpOutput,
-        $rowsPerStatement,
-        ProgressBarHelper $progressBarHelper,
-        LoggerInterface $logger
-    ) {
-        $this->connectionHandler = $connectionHandler;
-        $this->converterService = $converterService;
-        $this->dumpOutput = $dumpOutput;
-        $this->rowsPerStatement = $rowsPerStatement;
-        $this->progressBarHelper = $progressBarHelper;
-        $this->logger = $logger;
-
-        $this->dataSelector = new DataSelector($this->connectionHandler);
+        $this->dataLoader = new DataLoader($this->connectionHandler);
     }
 
     /**
+     * Dumps the contents of a single table. If the table is ignored, it does not dump anything.
+     *
      * @param Table              $table
      * @param TableConfiguration $tableConfig
      */
@@ -96,16 +81,16 @@ class TableContentsDumper
             return;
         }
 
-        $this->dumpTableContent($tableConfig, $table);
+        $this->dumpTableContent($table, $tableConfig);
     }
 
     /**
-     * Dumps the contents of a single table. The TableConfig is optional as tables do not need to be configured.
+     * Dumps the contents of a single table.
      *
-     * @param TableConfiguration $tableConfig
      * @param Table              $table
+     * @param TableConfiguration $tableConfig
      */
-    private function dumpTableContent(TableConfiguration $tableConfig, Table $table) {
+    private function dumpTableContent(Table $table, TableConfiguration $tableConfig) {
         // Ensure connection is still open (to prevent for example "MySQL server has gone" errors)
         $this->connectionHandler->reconnectIfNecessary();
 
@@ -119,14 +104,17 @@ class TableContentsDumper
         $harvestColumns = $tableConfig->getColumnsToHarvest();
 
         // The buffer is used to create combined SQL statements.
+        $maxBufferSize = $this->context->getConfig()->getOutputConfig()->getRowsPerStatement();
         $bufferCount = 0; // number of rows in buffer
         $buffer = array(); // array to buffer rows
 
-        $rowCount = $this->dataSelector->countRows($tableConfig, $table, $this->harvestedValues);
-        $result = $this->dataSelector->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
+        $rowCount = $this->dataLoader->countRows($tableConfig, $table, $this->harvestedValues);
+        $result = $this->dataLoader->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
 
         $this->logger->info(sprintf('Dumping table %s (%d rows)', $table->getName(), $rowCount));
-        $progress = $this->progressBarHelper->createProgressBar($rowCount, OutputInterface::VERBOSITY_VERY_VERBOSE);
+        $progress = $this->context
+            ->getProgressBarHelper()
+            ->createProgressBar($rowCount, OutputInterface::VERBOSITY_VERY_VERBOSE);
 
         foreach ($result as $row) {
             /*
@@ -150,7 +138,7 @@ class TableContentsDumper
             // Quote all values in the row.
             $context = $row;
             foreach ($row as $key => $value) {
-                $value = $this->converterService->convert($tableName . '.' . $key, $value, $context);
+                $value = $this->dataConverter->convert($tableName . '.' . $key, $value, $context);
 
                 if (is_null($value)) {
                     $value = 'NULL';
@@ -170,7 +158,7 @@ class TableContentsDumper
             $buffer[] = '(' . implode(', ', $row) . ')';
             $bufferCount++;
 
-            if ($bufferCount >= $this->rowsPerStatement) {
+            if ($bufferCount >= $maxBufferSize) {
                 $query = 'INSERT INTO ' . $quotedTableName . ' (' . $insertColumns . ')' .
                     ' VALUES ' . implode(', ', $buffer) . ';';
 

@@ -2,7 +2,7 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
-use Digilist\SnakeDumper\Configuration\DumperConfiguration;
+use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Doctrine\DBAL\Schema\Table;
@@ -15,7 +15,7 @@ class TableFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsWhiteListed()
     {
-        $config = new DumperConfiguration();
+        $config = new SqlDumperConfiguration();
         $config->setTableWhiteList(array('table1', 'table3'));
 
         $tableFilter = new TableFilter($config);
@@ -29,7 +29,7 @@ class TableFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function testIsWhiteListed_Wildcard()
     {
-        $config = new DumperConfiguration();
+        $config = new SqlDumperConfiguration();
         $config->setTableWhiteList(array('table*'));
 
         $tableFilter = new TableFilter($config);
@@ -45,7 +45,7 @@ class TableFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function testWhiteListFilter()
     {
-        $config = new DumperConfiguration();
+        $config = new SqlDumperConfiguration();
         $tableFilter = new TableFilter($config);
 
         $table1 = new Table('table1');
@@ -71,7 +71,7 @@ class TableFilterTest extends \PHPUnit_Framework_TestCase
         $ignoredTableConfig = new TableConfiguration('ignored');
         $ignoredTableConfig->setIgnoreTable();
 
-        $config = new DumperConfiguration();
+        $config = new SqlDumperConfiguration();
         $config->addTableConfig($ignoredTableConfig);
         $tableFilter = new TableFilter($config);
 

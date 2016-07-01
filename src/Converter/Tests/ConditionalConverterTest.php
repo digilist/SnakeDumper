@@ -3,7 +3,7 @@
 namespace Digilist\SnakeDumper\Converter\Tests;
 
 use Digilist\SnakeDumper\Converter\ConditionalConverter;
-use Digilist\SnakeDumper\Converter\Service\ConverterService;
+use Digilist\SnakeDumper\Converter\Service\DataConverter;
 
 class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
 {

@@ -10,19 +10,13 @@ use Digilist\SnakeDumper\Converter\ConverterInterface;
 use Digilist\SnakeDumper\Exception\InvalidConverterException;
 use ReflectionClass;
 
-class ConverterService implements ConverterServiceInterface
+class DataConverter implements DataConverterInterface
 {
 
     /**
      * @var ConverterInterface[]
      */
     private $converters = array();
-
-    /**
-     */
-    public function __construct()
-    {
-    }
 
     /**
      * @param string $key

@@ -5,7 +5,7 @@ namespace Digilist\SnakeDumper\Configuration;
 use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 
-class DumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
+class SqlDumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
 {
 
     /**
@@ -108,7 +108,7 @@ class DumperConfiguration extends AbstractConfiguration implements DumperConfigu
      */
     public function getFullQualifiedDumperClassName()
     {
-        return 'Digilist\\SnakeDumper\\Dumper\\' . $this->getDumper() . 'Dumper';
+        return sprintf('Digilist\\SnakeDumper\\Dumper\\%sDumper', ucfirst($this->getDumper()));
     }
 
     /**

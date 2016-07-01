@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
+use Doctrine\DBAL\Connection;
+
 class DatabaseConfiguration extends AbstractConfiguration
 {
 
@@ -10,7 +12,7 @@ class DatabaseConfiguration extends AbstractConfiguration
      */
     public function getDatabaseName()
     {
-        return $this->get('dbname', null);
+        return $this->get('dbname');
     }
 
     /**
@@ -107,13 +109,23 @@ class DatabaseConfiguration extends AbstractConfiguration
         return $this->set('charset', $value);
     }
 
+    /**
+     * @return Connection
+     */
+    public function getConnection()
+    {
+        return $this->get('connection');
+    }
+
     protected function parseConfig(array $config)
     {
-        $this->ensureHas('dbname');
-        $this->ensureHas('driver');
-        $this->ensureHas('host');
-        $this->ensureHas('password');
-        $this->ensureHas('user');
-        $this->ensureHas('charset');
+        if (!isset($config['connection'])) {
+            $this->ensureHas('dbname');
+            $this->ensureHas('driver');
+            $this->ensureHas('host');
+            $this->ensureHas('password');
+            $this->ensureHas('user');
+            $this->ensureHas('charset');
+        }
     }
 }
