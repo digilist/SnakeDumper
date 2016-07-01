@@ -1,0 +1,6 @@
+{
+    "output": "snakedumper.phar",
+    "directories": ["src", "vendor"],
+    "main": "bin/snakedumper",
+    "stub": true
+}
