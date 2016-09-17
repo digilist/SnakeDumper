@@ -25,7 +25,7 @@ class SqlDumperTest extends AbstractSqlTest
                 'connection' => $this->connection,
             ],
             'output' => array(
-                'rowsPerStatement' => 3,
+                'rows_per_statement' => 3,
             ),
             'tables' => array(
                 'Billing' => array(

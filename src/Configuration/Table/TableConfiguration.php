@@ -112,7 +112,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function getOrderBy()
     {
-        return $this->get('orderBy');
+        return $this->get('order_by');
     }
 
     /**
@@ -122,7 +122,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function setOrderBy($orderBy)
     {
-        return $this->set('orderBy', $orderBy);
+        return $this->set('order_by', $orderBy);
     }
 
     /**

@@ -26,7 +26,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
         $rootChildrenNode
             ->arrayNode('output')
                 ->children()
-                    ->scalarNode('rowsPerStatement')->end()
+                    ->scalarNode('rows_per_statement')->end()
                     ->scalarNode('file')->defaultValue('php://stdout')->end()
                     ->booleanNode('gzip')->defaultFalse()->end()
                 ->end()
@@ -60,7 +60,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                         ->booleanNode('ignore_table')->defaultFalse()->end()
                         ->booleanNode('ignore_content')->defaultFalse()->end()
                         ->scalarNode('query')->end()
-                        ->scalarNode('orderBy')->end()
+                        ->scalarNode('order_by')->end()
                         ->integerNode('limit')->end()
                         ->arrayNode('converters')
                             ->prototype('variable')->end()

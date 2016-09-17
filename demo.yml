@@ -1,6 +1,6 @@
 dumper: Sql
 output:
-    rowsPerStatement: 100
+    rows_per_statement: 100
     file: php://stdout
     gzip: false
 database:
@@ -23,7 +23,7 @@ tables:
     foo_no_content:
         ignore_content: true
     foo:
-        orderBy: id ASC
+        order_by: id ASC
         limit: 100
         converters:
             name:

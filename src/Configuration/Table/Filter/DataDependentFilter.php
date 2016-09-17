@@ -47,7 +47,9 @@ class DataDependentFilter extends DefaultFilter
      */
     public function setReferencedTable($referencedTable)
     {
-        return $this->referencedTable = $referencedTable;
+        $this->referencedTable = $referencedTable;
+
+        return $this;
     }
 
     /**
@@ -65,6 +67,8 @@ class DataDependentFilter extends DefaultFilter
      */
     public function setReferencedColumn($referencedColumn)
     {
-        return $this->referencedColumn = $referencedColumn;
+        $this->referencedColumn = $referencedColumn;
+
+        return $this;
     }
 }

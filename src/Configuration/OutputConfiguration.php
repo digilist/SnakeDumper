@@ -44,7 +44,7 @@ class OutputConfiguration extends AbstractConfiguration
      */
     public function getRowsPerStatement()
     {
-        return $this->get('rowsPerStatement', 100);
+        return $this->get('rows_per_statement', 100);
     }
 
     /**
@@ -53,6 +53,6 @@ class OutputConfiguration extends AbstractConfiguration
      */
     public function setRowsPerStatement($rowsPerStatement)
     {
-        $this->set('rowsPerStatement', $rowsPerStatement);
+        $this->set('rows_per_statement', $rowsPerStatement);
     }
 }
