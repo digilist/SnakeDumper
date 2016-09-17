@@ -48,4 +48,4 @@ tables:
                 - JohnDoe
     foo_depends:
         filters:
-            - [depends, foo, foo.id]
+            - [depends, foo_id, foo.id] # Column foo_id has a foreign key on foo.id
