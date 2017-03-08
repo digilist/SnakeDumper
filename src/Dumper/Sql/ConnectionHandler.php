@@ -113,6 +113,7 @@ class ConnectionHandler
         $connectionParams = array(
             'driver'   => $this->config->getDriver(),
             'host'     => $this->config->getHost(),
+            'port'     => $this->config->getPort(),
             'user'     => $this->config->getUser(),
             'password' => $this->config->getPassword(),
             'dbname'   => $this->config->getDatabaseName(),

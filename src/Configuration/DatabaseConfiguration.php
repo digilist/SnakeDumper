@@ -61,6 +61,23 @@ class DatabaseConfiguration extends AbstractConfiguration
     /**
      * @return string
      */
+    public function getPort()
+    {
+        return $this->get('port');
+    }
+
+    /**
+     * @param string $value
+     * @return string
+     */
+    public function setPort($value)
+    {
+        return $this->set('port', $value);
+    }
+
+    /**
+     * @return string
+     */
     public function getPassword()
     {
         return $this->get('password');
