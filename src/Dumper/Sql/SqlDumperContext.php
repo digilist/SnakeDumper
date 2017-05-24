@@ -7,7 +7,6 @@ use Digilist\SnakeDumper\Converter\Service\DataConverterInterface;
 use Digilist\SnakeDumper\Converter\Service\SqlDataConverter;
 use Digilist\SnakeDumper\Dumper\Context\AbstractDumperContext;
 use Digilist\SnakeDumper\Dumper\Helper\ProgressBarHelper;
-use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 

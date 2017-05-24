@@ -38,6 +38,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                 ->children()
                     ->scalarNode('driver')->end()
                     ->scalarNode('host')->end()
+                    ->scalarNode('port')->defaultValue(null)->end()
                     ->scalarNode('user')->end()
                     ->scalarNode('password')->end()
                     ->scalarNode('dbname')->end()
