@@ -3,10 +3,10 @@
 namespace Digilist\SnakeDumper\Command;
 
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\SnakeConfigurationTree;
-use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
+use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Dumper\DumperInterface;
+use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -25,6 +25,7 @@ class DumpCommand extends Command
             ->addArgument('config', InputArgument::REQUIRED, 'The path to your config file.')
             ->addOption('progress', null, InputOption::VALUE_NONE, 'Show a progress bar')
             ->addOption('disable-limits', null, InputOption::VALUE_NONE, 'Create a full database dump')
+            ->addOption('dbname', null, InputOption::VALUE_REQUIRED, 'Override the name of database that should be dumped')
             ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Override the configured password')
         ;
     }
@@ -88,7 +89,10 @@ class DumpCommand extends Command
      */
     private function overrideConfigs(DumperConfigurationInterface $config, InputInterface $input)
     {
-        if ($input->hasOption('password')) {
+        if ($input->getOption('dbname') !== null) {
+            $config->getDatabaseConfig()->setDatabaseName($input->getOption('dbname'));
+        }
+        if ($input->getOption('password') !== null) {
             $config->getDatabaseConfig()->setPassword($input->getOption('password'));
         }
         if ($input->getOption('disable-limits')) {
