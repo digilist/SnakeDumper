@@ -48,11 +48,19 @@ php snakedumper.phar dump ./demo.yml
 ### Example Configuration
 There are a lot of configuration options for the SnakeDumper available. The best way to get started is by looking at the example configuration file ([demo.yml](demo.yml)). For other available options, please take a look at the [docs/](docs).
 
+## Testing
+
+The test suite needs a running MySQL server at the moment. You can use the following Docker command to start one:
+
+```bash
+docker run -it -p 3306:3306 --rm -e MYSQL_ALLOW_EMPTY_PASSWORD=1 mysql:5.7 --character-set-server=utf8 --collation-server=utf8_unicode_ci
+```
+
 ### Security / Caution!
 Please note that some configuration parameters are passed directly to the database server. Although this tool does not perform any changes on your data, it is still possible to alter your data with invalid configuration parameters (e.g. by defining a custom query which performs updates). So please do not configure this tool with any kind of user provided data! We do not perform any security checks at the moment! Use it at your own risk, we give absolutely no warranty.
 
 ## How to contribute
-We are option for every type of contribution. You can test the SnakeDumper, report bugs, propose new features or help us with the development. Feel free to create a new issue or open a pull request :smiley:
+We are open for every type of contribution. You can test the SnakeDumper, report bugs, propose new features or help us with the development. Feel free to create a new issue or open a pull request :smiley:
 
 ## License
 The MIT License (MIT). Please see [License File](LICENSE) for more information.

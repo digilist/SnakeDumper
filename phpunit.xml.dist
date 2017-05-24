@@ -9,7 +9,7 @@
          processIsolation="false"
          stopOnFailure="false"
          syntaxCheck="false"
-         bootstrap="phpunit.bootstrap.php"
+         bootstrap="vendor/autoload.php"
 >
     <php>
         <ini name="intl.default_locale" value="en"/>
