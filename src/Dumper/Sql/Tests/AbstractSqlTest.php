@@ -5,6 +5,7 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Types\Type;
 
 abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
 {
@@ -32,6 +33,12 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
 //        $pdo = new \PDO('sqlite::memory:');
 //        $pdo->query('PRAGMA foreign_keys=ON;');
 //
+
+        // Register custom type
+        if (!Type::hasType('test')) {
+            Type::addType('test', TestType::class);
+        }
+
         // Use MySQL instead.
         $this->connection = DriverManager::getConnection(array(
             'user'     => 'root',
@@ -65,7 +72,8 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
 
         $pdo->query('CREATE TABLE Customer (
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
-            name VARCHAR(10)
+            name VARCHAR(10),
+            `test` VARCHAR(10) NOT NULL COLLATE utf8_unicode_ci COMMENT \'(DC2Type:test)\'
         )');
         $pdo->query('CREATE TABLE Billing (
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -88,11 +96,11 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
         }
 
         // insert data
-        $pdo->query('INSERT INTO Customer VALUES (1, "Markus")');
-        $pdo->query('INSERT INTO Customer VALUES (2, "Konstantin")');
-        $pdo->query('INSERT INTO Customer VALUES (3, "John")');
-        $pdo->query('INSERT INTO Customer VALUES (4, "Konrad")');
-        $pdo->query('INSERT INTO Customer VALUES (5, "Mark")');
+        $pdo->query('INSERT INTO Customer VALUES (1, "Markus", "today")');
+        $pdo->query('INSERT INTO Customer VALUES (2, "Konstantin", "yesterday")');
+        $pdo->query('INSERT INTO Customer VALUES (3, "John", "tomorrow")');
+        $pdo->query('INSERT INTO Customer VALUES (4, "Konrad", "always")');
+        $pdo->query('INSERT INTO Customer VALUES (5, "Mark", "today")');
         $pdo->query('INSERT INTO Billing VALUES (1, 1, "IT", 42)');
         $pdo->query('INSERT INTO Billing VALUES (2, 1, NULL, 1337)');
         $pdo->query('INSERT INTO Billing VALUES (3, 2, "Some stuff", 1337)');
