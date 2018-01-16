@@ -61,7 +61,7 @@ class TableContentsDumper
         $this->dumpOutput = $context->getDumpOutput();
         $this->logger = $context->getLogger();
 
-        $this->dataLoader = new DataLoader($this->connectionHandler);
+        $this->dataLoader = new DataLoader($this->connectionHandler, $context->getLogger());
     }
 
     /**
@@ -108,6 +108,7 @@ class TableContentsDumper
         $bufferCount = 0; // number of rows in buffer
         $buffer = array(); // array to buffer rows
 
+        $this->logger->info('Querying table ' . $table->getName());
         $rowCount = $this->dataLoader->countRows($tableConfig, $table, $this->harvestedValues);
         $result = $this->dataLoader->executeSelectQuery($tableConfig, $table, $this->harvestedValues);
 

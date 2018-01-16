@@ -8,6 +8,7 @@ use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Digilist\SnakeDumper\Dumper\Sql\DataLoader;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
+use Psr\Log\NullLogger;
 
 class DataLoaderTest extends AbstractSqlTest
 {
@@ -30,7 +31,7 @@ class DataLoaderTest extends AbstractSqlTest
         parent::setUp();
 
         $dbConfig = new DatabaseConfiguration(['connection' => $this->connection]);
-        $this->dataLoader = new DataLoader(new ConnectionHandler($dbConfig));
+        $this->dataLoader = new DataLoader(new ConnectionHandler($dbConfig), new NullLogger());
 
         $refl = new \ReflectionObject($this->dataLoader);
         $createSelectQueryBuilder = $refl->getMethod('createSelectQueryBuilder');

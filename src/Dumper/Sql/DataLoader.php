@@ -9,6 +9,7 @@ use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 
 /**
  * This class helps to query the appropriate data that should be dumped.
@@ -20,13 +21,19 @@ class DataLoader
      * @var ConnectionHandler
      */
     private $connectionHandler;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * @param ConnectionHandler $connectionHandler
+     * @param LoggerInterface   $logger
      */
-    public function __construct(ConnectionHandler $connectionHandler)
+    public function __construct(ConnectionHandler $connectionHandler, LoggerInterface $logger)
     {
         $this->connectionHandler = $connectionHandler;
+        $this->logger = $logger;
     }
 
     /**
@@ -43,6 +50,7 @@ class DataLoader
     {
         list($query, $parameters) = $this->buildSelectQuery($tableConfig, $table, $harvestedValues);
 
+        $this->logger->debug('Executing select query' . $query);
         $result = $this->connectionHandler->getConnection()->prepare($query);
         $result->execute($parameters);
 

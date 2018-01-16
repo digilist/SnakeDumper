@@ -156,8 +156,13 @@ abstract class AbstractDumperContext implements DumperContextInterface
             return new NullLogger();
         }
 
+        $minLevel = Logger::INFO;
+        if ($applicationOutput->getVerbosity() >= OutputInterface::VERBOSITY_VERY_VERBOSE) {
+            $minLevel = Logger::DEBUG;
+        }
+
         $logger = new Logger('snakedumper');
-        $logger->pushHandler(new StreamHandler(fopen('php://stderr', 'w')));
+        $logger->pushHandler(new StreamHandler(fopen('php://stderr', 'w'), $minLevel));
 
         return $logger;
     }
