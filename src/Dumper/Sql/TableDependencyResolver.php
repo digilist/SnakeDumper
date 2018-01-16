@@ -91,15 +91,21 @@ class TableDependencyResolver
                 || !empty($referencedTableConfig->getFilters())
                 || $referencedTableConfig->getQuery() != null;
 
-            if ($hasDependency) {
-                $tableConfig->addFilter(
-                    new DataDependentFilter(
-                        $foreignKey->getColumns()[0],
-                        $referencedTable,
-                        $foreignKey->getForeignColumns()[0]
-                    )
-                );
+            if (!$hasDependency) {
+                continue;
             }
+            if ($foreignKey->getForeignTableName() === $tableConfig->getName()) {
+                // TODO foreign keys pointing to own table not supported yet
+                continue;
+            }
+
+            $tableConfig->addFilter(
+                new DataDependentFilter(
+                    $foreignKey->getColumns()[0],
+                    $referencedTable,
+                    $foreignKey->getForeignColumns()[0]
+                )
+            );
         }
     }
 }
