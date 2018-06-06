@@ -25,8 +25,12 @@ class DumpCommand extends Command
             ->addArgument('config', InputArgument::REQUIRED, 'The path to your config file.')
             ->addOption('progress', null, InputOption::VALUE_NONE, 'Show a progress bar')
             ->addOption('disable-limits', null, InputOption::VALUE_NONE, 'Create a full database dump')
-            ->addOption('dbname', null, InputOption::VALUE_REQUIRED, 'Override the name of database that should be dumped')
+            ->addOption('disable-structure', null, InputOption::VALUE_NONE, 'Create a dump containing data only')
+            ->addOption('host', 'H', InputOption::VALUE_REQUIRED, 'Override the configured host')
+            ->addOption('port', 'P', InputOption::VALUE_REQUIRED, 'Override the configured port')
+            ->addOption('user', 'u', InputOption::VALUE_REQUIRED, 'Override the configured user')
             ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Override the configured password')
+            ->addOption('dbname', null, InputOption::VALUE_REQUIRED, 'Override the name of database that should be dumped')
         ;
     }
 
@@ -92,13 +96,25 @@ class DumpCommand extends Command
         if ($input->getOption('dbname') !== null) {
             $config->getDatabaseConfig()->setDatabaseName($input->getOption('dbname'));
         }
+        if ($input->getOption('user') !== null) {
+            $config->getDatabaseConfig()->setUser($input->getOption('user'));
+        }
         if ($input->getOption('password') !== null) {
             $config->getDatabaseConfig()->setPassword($input->getOption('password'));
+        }
+        if ($input->getOption('host') !== null) {
+            $config->getDatabaseConfig()->setHost($input->getOption('host'));
+        }
+        if ($input->getOption('port') !== null) {
+            $config->getDatabaseConfig()->setPort($input->getOption('port'));
         }
         if ($input->getOption('disable-limits')) {
             foreach ($config->getTableConfigs() as $tableConfig) {
                 $tableConfig->setLimit(null);
             }
+        }
+        if ($input->getOption('disable-structure')) {
+            $config->setIgnoreStructure(true);
         }
     }
 }

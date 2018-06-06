@@ -24,6 +24,11 @@ class SqlDumperConfiguration extends AbstractConfiguration implements DumperConf
     private $tableConfigs = array();
 
     /**
+     * @var bool
+     */
+    private $ignoreStructure = false;
+
+    /**
      * @return DatabaseConfiguration
      */
     public function getDatabaseConfig()
@@ -162,5 +167,25 @@ class SqlDumperConfiguration extends AbstractConfiguration implements DumperConf
         }
 
         $this->parseDependencies();
+    }
+
+    /**
+     * Get ignore structure.
+     *
+     * @return bool
+     */
+    public function isIgnoreStructure()
+    {
+        return $this->ignoreStructure;
+    }
+
+    /**
+     * Set ignore structure.
+     *
+     * @param bool $ignoreStructure
+     */
+    public function setIgnoreStructure($ignoreStructure)
+    {
+        $this->ignoreStructure = $ignoreStructure;
     }
 }
