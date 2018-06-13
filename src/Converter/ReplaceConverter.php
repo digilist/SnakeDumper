@@ -23,7 +23,7 @@ class ReplaceConverter implements ConverterInterface
      */
     public function __construct(array $parameters)
     {
-        if (empty($parameters['search']) || empty($parameters['replace'])) {
+        if (empty($parameters['search']) || is_null($parameters['replace'])) {
             throw new InvalidArgumentException('You have to pass the search and value to replace.');
         }
 

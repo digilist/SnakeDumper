@@ -43,6 +43,13 @@ class SnakeConfigurationTree implements ConfigurationInterface
                     ->scalarNode('password')->end()
                     ->scalarNode('dbname')->end()
                     ->scalarNode('charset')->end()
+                    ->arrayNode('custom_types')
+                        ->prototype('array')
+                            ->children()
+                                ->scalarNode('class')->end()
+                            ->end()
+                        ->end()
+                    ->end()
                 ->end()
             ->end()
         ;
