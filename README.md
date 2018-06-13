@@ -46,7 +46,7 @@ php snakedumper.phar dump ./demo.yml
 
 
 ### Example Configuration
-There are a lot of configuration options for the SnakeDumper available. The best way to get started is by looking at the example configuration file ([demo.yml](demo.yml)). For other available options, please take a look at the [docs/](docs).
+There are a lot of configuration options for the SnakeDumper available. The best way to get started is by looking at the example configuration file ([demo.yml](demo.yml)). 
 
 ## Testing
 
