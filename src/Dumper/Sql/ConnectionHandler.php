@@ -111,18 +111,21 @@ class ConnectionHandler
     private function connect()
     {
         $connectionParams = array(
-            'driver'   => $this->config->getDriver(),
-            'host'     => $this->config->getHost(),
-            'port'     => $this->config->getPort(),
-            'user'     => $this->config->getUser(),
+            'driver' => $this->config->getDriver(),
+            'host' => $this->config->getHost(),
+            'port' => $this->config->getPort(),
+            'user' => $this->config->getUser(),
             'password' => $this->config->getPassword(),
-            'dbname'   => $this->config->getDatabaseName(),
-            'charset'  => $this->config->getCharset(),
+            'dbname' => $this->config->getDatabaseName(),
+            'charset' => $this->config->getCharset(),
+            'wrapperClass' => \Digilist\SnakeDumper\Dumper\Bridge\Doctrine\DBAL\Connection::class,
         );
 
         $dbalConfig = new Configuration();
         $this->connection = DriverManager::getConnection($connectionParams, $dbalConfig);
         $this->connection->connect();
+
+        $this->connection->getSchemaManager();
 
         $this->initPlatformAdjustment($this->connection);
         $this->platformAdjustment->initConnection();

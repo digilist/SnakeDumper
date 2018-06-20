@@ -63,4 +63,21 @@ class TableSelectorTest extends AbstractSqlTest
         $this->assertEquals('customer_id', $billingTable->getForeignKey('customer_id')->getName());
         $this->assertEquals('`customer_id`', $billingTable->getForeignKey('customer_id')->getQuotedName($this->platform));
     }
+
+    /**
+     * Tests that the dumper does not get confused by column comments that indicate custom doctrine types (which are
+     * not registered).
+     *
+     * @test
+     */
+    public function testDoctrineCustomTypes()
+    {
+        $pdo = $this->connection->getWrappedConnection();
+        $pdo->query('CREATE TABLE custom_doctrine_type (
+                         foobar VARCHAR(255) NOT NULL COMMENT \'(DC2Type:example)\'
+                     )');
+
+        $tableSelector = new TableSelector($this->connection);
+        $tableSelector->findTablesToDump(new SqlDumperConfiguration());
+    }
 }

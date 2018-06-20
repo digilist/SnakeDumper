@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
+use Digilist\SnakeDumper\Configuration\DatabaseConfiguration;
+use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
@@ -34,10 +36,11 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
 //
         // Use MySQL instead.
         $this->connection = DriverManager::getConnection(array(
-            'user'     => 'root',
+            'user' => 'root',
             'password' => '',
-            'host'     => '127.0.0.1',
-            'driver'   => 'pdo_mysql',
+            'host' => '127.0.0.1',
+            'driver' => 'pdo_mysql',
+            'wrapperClass' => \Digilist\SnakeDumper\Dumper\Bridge\Doctrine\DBAL\Connection::class,
         ));
 
         $this->connection->exec('DROP DATABASE IF EXISTS ' . self::DBNAME);
