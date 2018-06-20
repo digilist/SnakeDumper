@@ -1,5 +1,5 @@
 # SnakeDumper
-SnakeDumper is a tool to create a reasonable development dump of your production database **which does not contain any personal data**. It works similar to mysqldumper (or related tools), but applies a set of data converters and filters to your data. (If there aren't any filters and converteres configured it works exactly like any other dumper.)
+SnakeDumper is a tool to create a reasonable development dump of your production database **which does not contain any sensitive data**. It works similar to mysqldumper (or related tools), but applies a set of data converters and filters to your data. (If there aren't any filters and converteres configured it works exactly like any other dumper.)
 
 _Please note that the SnakeDumper is currently in an early preview phase. It is written to work with any SQL-compatible database, but is at the moment only tested against MySQL and SQLite._ The vision is to support a wide range of database systems later (including NoSQL).
 
@@ -20,7 +20,7 @@ Furthermore, you can configure SnakeDumper to skip whole tables or the contents 
 
 ### Data Converter
 
-The main objective of the SnakeDumper is to build reasonable development dumps that do not contain any personal data. Therefore, there are are various data converts that allow to alter the dumped data and replace all personal information with other random (or static) data.
+The main objective of the SnakeDumper is to build reasonable development dumps that do not contain any sensitive data. Therefore, there are are various data converts that allow to alter the dumped data and replace all sensitive information with other random (or static) data.
 
 There are already a lot of converters. Here are just a few examples:
 - Random first and last name
@@ -44,8 +44,10 @@ php bin/snakedumper dump ./demo.yml
 php snakedumper.phar dump ./demo.yml
 ```
 
+To get started please take a look at the [docs](docs/index.md).
 
 ### Example Configuration
+
 There are a lot of configuration options for the SnakeDumper available. The best way to get started is by looking at the example configuration file ([demo.yml](demo.yml)). 
 
 ## Testing
@@ -56,8 +58,13 @@ The test suite needs a running MySQL server at the moment. You can use the follo
 docker run -it -p 3306:3306 --rm -e MYSQL_ALLOW_EMPTY_PASSWORD=1 mysql:5.7 --character-set-server=utf8 --collation-server=utf8_unicode_ci
 ```
 
+Alternatively, there is a [docker-compose.yml](docker-compose.yml) which you can use to start a Docker container for testing.
+
 ### Security / Caution!
+
 Please note that some configuration parameters are passed directly to the database server. Although this tool does not perform any changes on your data, it is still possible to alter your data with invalid configuration parameters (e.g. by defining a custom query which performs updates). So please do not configure this tool with any kind of user provided data! We do not perform any security checks at the moment! Use it at your own risk, we give absolutely no warranty.
+
+Furthermore, SnakeDumper does not guarantee that there is no sensitive data left in your dump. You - as a user of SnakeDumper - are responsible for the correct configuration and usage.
 
 ## How to contribute
 We are open for every type of contribution. You can test the SnakeDumper, report bugs, propose new features or help us with the development. Feel free to create a new issue or open a pull request :smiley:
