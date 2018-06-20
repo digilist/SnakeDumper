@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
 use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Dumper\Sql\Dumper\StructureDumper;
 use Digilist\SnakeDumper\Dumper\Sql\IdentifierQuoter;
 use Digilist\SnakeDumper\Dumper\Sql\TableSelector;
 
@@ -78,6 +79,9 @@ class TableSelectorTest extends AbstractSqlTest
                      )');
 
         $tableSelector = new TableSelector($this->connection);
-        $tableSelector->findTablesToDump(new SqlDumperConfiguration());
+        $tables = $tableSelector->findTablesToDump(new SqlDumperConfiguration());
+
+        $this->assertEquals('string', $tables[0]->getColumn('foobar')->getType()->getName());
+        $this->assertEquals('(DC2Type:example)', $tables[0]->getColumn('foobar')->getComment());
     }
 }
