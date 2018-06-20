@@ -30,6 +30,7 @@ class DumpCommand extends Command
             ->addOption('port', 'P', InputOption::VALUE_REQUIRED, 'Override the configured port')
             ->addOption('user', 'u', InputOption::VALUE_REQUIRED, 'Override the configured user')
             ->addOption('password', 'p', InputOption::VALUE_REQUIRED, 'Override the configured password')
+            ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Override the configured output path')
             ->addOption('dbname', null, InputOption::VALUE_REQUIRED, 'Override the name of database that should be dumped')
         ;
     }
@@ -91,7 +92,7 @@ class DumpCommand extends Command
      * @param DumperConfigurationInterface $config
      * @param InputInterface               $input
      */
-    private function overrideConfigs(DumperConfigurationInterface $config, InputInterface $input)
+    private function overrideConfigs(SqlDumperConfiguration $config, InputInterface $input)
     {
         if ($input->getOption('dbname') !== null) {
             $config->getDatabaseConfig()->setDatabaseName($input->getOption('dbname'));
@@ -115,6 +116,11 @@ class DumpCommand extends Command
         }
         if ($input->getOption('disable-structure')) {
             $config->setIgnoreStructure(true);
+        }
+        if ($input->getOption('output') !== null) {
+            $path = $input->getOption('output');
+            $config->getOutputConfig()->setFile($path);
+            $config->getOutputConfig()->setGzip(strrpos($path, '.gz') === strlen($path) - 3);
         }
     }
 }
