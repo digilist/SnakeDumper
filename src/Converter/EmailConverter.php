@@ -17,4 +17,9 @@ class EmailConverter extends FakerConverter
 
         parent::__construct($arguments);
     }
+
+    public function convert($value, array $context = array())
+    {
+        return $context[id]."@fakemail.com";
+    }
 }
