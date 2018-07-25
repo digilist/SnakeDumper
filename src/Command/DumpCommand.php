@@ -94,20 +94,20 @@ class DumpCommand extends Command
      */
     private function overrideConfigs(SqlDumperConfiguration $config, InputInterface $input)
     {
-        if ($input->getOption('dbname') !== null) {
-            $config->getDatabaseConfig()->setDatabaseName($input->getOption('dbname'));
+        if (($dbname = $input->getOption('dbname')) !== null) {
+            $config->getDatabaseConfig()->setDatabaseName($dbname);
         }
-        if ($input->getOption('user') !== null) {
-            $config->getDatabaseConfig()->setUser($input->getOption('user'));
+        if (($user = $input->getOption('user')) !== null) {
+            $config->getDatabaseConfig()->setUser($user);
         }
-        if ($input->getOption('password') !== null) {
-            $config->getDatabaseConfig()->setPassword($input->getOption('password'));
+        if (($password = $input->getOption('password')) !== null) {
+            $config->getDatabaseConfig()->setPassword($password);
         }
-        if ($input->getOption('host') !== null) {
-            $config->getDatabaseConfig()->setHost($input->getOption('host'));
+        if (($host = $input->getOption('host')) !== null) {
+            $config->getDatabaseConfig()->setHost($host);
         }
-        if ($input->getOption('port') !== null) {
-            $config->getDatabaseConfig()->setPort($input->getOption('port'));
+        if (($port = $input->getOption('port')) !== null) {
+            $config->getDatabaseConfig()->setPort($port);
         }
         if ($input->getOption('disable-limits')) {
             foreach ($config->getTableConfigs() as $tableConfig) {
@@ -117,8 +117,7 @@ class DumpCommand extends Command
         if ($input->getOption('disable-structure')) {
             $config->setIgnoreStructure(true);
         }
-        if ($input->getOption('output') !== null) {
-            $path = $input->getOption('output');
+        if (($path = $input->getOption('output')) !== null) {
             $config->getOutputConfig()->setFile($path);
             $config->getOutputConfig()->setGzip(strrpos($path, '.gz') === strlen($path) - 3);
         }
