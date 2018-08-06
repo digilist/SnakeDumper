@@ -30,6 +30,10 @@ tables:
                 - JohnDoe
             street:
                 - StreetName
+            phone:
+                - PhoneNumber:
+                    prefix: '+33'
+                    length: 9
             website:
                 - Conditional:
                     condition: "$website != ''"
@@ -46,3 +50,5 @@ tables:
         converters:
             name:
                 - JohnDoe
+            phone:
+                - PhoneNumber
