@@ -60,9 +60,15 @@ class StructureDumper
     public function dumpConstraints(array $tables) {
         foreach ($tables as $table) {
             foreach ($table->getForeignKeys() as $constraint) {
+                $options = '';
+                if ($onUpdate = $constraint->onUpdate()) {
+                    $options .= ' ON UPDATE' . $onUpdate;
+                }
+                if ($onDelete = $constraint->onDelete()) {
+                    $options .= ' ON DELETE ' . $onDelete;
+                }
                 $constraint = $this->platform->getCreateConstraintSQL($constraint, $table);
-
-                $this->dumpOutput->writeln($constraint . ';');
+                $this->dumpOutput->writeln($constraint . $options . ';');
             }
         }
     }
