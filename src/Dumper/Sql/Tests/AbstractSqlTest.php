@@ -2,13 +2,12 @@
 
 namespace Digilist\SnakeDumper\Dumper\Sql\Tests;
 
-use Digilist\SnakeDumper\Configuration\DatabaseConfiguration;
-use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use PHPUnit\Framework\TestCase;
 
-abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
+abstract class AbstractSqlTest extends TestCase
 {
 
     const DBNAME = 'snakedumper';
@@ -75,7 +74,7 @@ abstract class AbstractSqlTest extends \PHPUnit_Framework_TestCase
             customer_id INTEGER,
             product VARCHAR(100),
             amount REAL,
-            CONSTRAINT customer_id FOREIGN KEY (customer_id) REFERENCES Customer(id)
+            CONSTRAINT customer_id FOREIGN KEY (customer_id) REFERENCES Customer(id) ON UPDATE CASCADE ON DELETE SET NULL
         )');
         $pdo->query('CREATE INDEX billing_product ON Billing (product)');
 

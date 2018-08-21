@@ -4,12 +4,13 @@ namespace Digilist\SnakeDumper\Converter\Tests;
 
 use Digilist\SnakeDumper\Converter\RandomConverter;
 use Digilist\SnakeDumper\Exception\InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @package Digilist\SnakeDumper\Converter\Tests
  * @author moellers
  */
-class RandomConverterTest extends \PHPUnit_Framework_TestCase
+class RandomConverterTest extends TestCase
 {
 
     public function testEqualBounds()

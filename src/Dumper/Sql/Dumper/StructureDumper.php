@@ -62,7 +62,7 @@ class StructureDumper
             foreach ($table->getForeignKeys() as $constraint) {
                 $options = '';
                 if ($onUpdate = $constraint->onUpdate()) {
-                    $options .= ' ON UPDATE' . $onUpdate;
+                    $options .= ' ON UPDATE ' . $onUpdate;
                 }
                 if ($onDelete = $constraint->onDelete()) {
                     $options .= ' ON DELETE ' . $onDelete;
