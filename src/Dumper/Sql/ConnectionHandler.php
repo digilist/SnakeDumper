@@ -119,6 +119,7 @@ class ConnectionHandler
             'dbname' => $this->config->getDatabaseName(),
             'charset' => $this->config->getCharset(),
             'wrapperClass' => \Digilist\SnakeDumper\Dumper\Bridge\Doctrine\DBAL\Connection::class,
+            'driverOptions' => $this->config->getPdoOptions(),
         );
 
         $dbalConfig = new Configuration();

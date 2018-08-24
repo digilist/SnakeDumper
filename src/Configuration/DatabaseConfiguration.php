@@ -134,6 +134,24 @@ class DatabaseConfiguration extends AbstractConfiguration
         return $this->get('connection');
     }
 
+    /**
+     * @return array
+     */
+    public function getPdoOptions()
+    {
+        return $this->get('pdo_options');
+    }
+
+    /**
+     * @param array $options
+     *
+     * @return DatabaseConfiguration
+     */
+    public function setPdoOptions(array $options)
+    {
+        return $this->set('pdo_options', $options);
+    }
+
     protected function parseConfig(array $config)
     {
         if (!isset($config['connection'])) {
