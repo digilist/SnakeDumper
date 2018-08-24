@@ -6,8 +6,9 @@ use Digilist\SnakeDumper\Configuration\SqlDumperConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Dumper\Sql\TableFilter;
 use Doctrine\DBAL\Schema\Table;
+use PHPUnit\Framework\TestCase;
 
-class TableFilterTest extends \PHPUnit_Framework_TestCase
+class TableFilterTest extends TestCase
 {
 
     /**

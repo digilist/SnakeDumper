@@ -3,9 +3,9 @@
 namespace Digilist\SnakeDumper\Converter\Tests;
 
 use Digilist\SnakeDumper\Converter\ConditionalConverter;
-use Digilist\SnakeDumper\Converter\Service\DataConverter;
+use PHPUnit\Framework\TestCase;
 
-class ConditionalConverterTest extends \PHPUnit_Framework_TestCase
+class ConditionalConverterTest extends TestCase
 {
 
     public function testConditionalIfTrue()
