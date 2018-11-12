@@ -74,7 +74,7 @@ class DumpCommand extends Command
             throw new \InvalidArgumentException('Cannot find configuration file: ' . $configArg);
         }
 
-        $config = Yaml::parse(file_get_contents($configFile));
+        $config = Yaml::parse(file_get_contents($configFile), Yaml::PARSE_CONSTANT);
 
         $processor = new Processor();
         $configuration = new SnakeConfigurationTree();
