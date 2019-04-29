@@ -40,16 +40,16 @@ tables:
 
             # nested conditional
             role:
-            - Conditional:
-                  condition: "$name == 'John Doe'"
-                  # if true, keep the original value
-                  if_false_converters:
-                      - Conditional:
-                            condition: "$role == 'programmer'"
-                            if_true:
-                                - 'super employee'
-                            if_false_converters:
-                                - 'employee'
+                - Conditional:
+                condition: "$name == 'John Doe'"
+                # if true, keep the original value
+                if_false_converters:
+                    - Conditional:
+                        condition: "$role == 'programmer'"
+                        if_true:
+                            - 'super employee'
+                        if_false_converters:
+                            - 'employee'
 
         filters:
             - [in, 'id', [1, 2, 3]] # only select rows which id is 1, 2 or 3
