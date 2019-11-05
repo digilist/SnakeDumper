@@ -57,12 +57,12 @@ class TableSelector
         $tables = $schemaManager->listTables();
         $this->createMissingTableConfigs($config, $tables);
 
-        $tables = $this->tableDependencyResolver->sortTablesByDependencies($tables);
-        $this->tableDependencyResolver->createDependentFilters($tables, $config);
-
         $filter = new TableFilter($config);
         $tables = $filter->filterWhiteListTables($tables);
         $tables = $filter->filterIgnoredTables($tables);
+
+        $tables = $this->tableDependencyResolver->sortTablesByDependencies($tables);
+        $this->tableDependencyResolver->createDependentFilters($tables, $config);
 
         // Quote all identifiers, as Doctrine DBAL only quotes reserved keywords by default
         $tables = $this->identifierQuoter->quoteTables($tables);
