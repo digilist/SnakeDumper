@@ -14,7 +14,7 @@
         "symfony/config": "~3.0",
         "symfony/yaml": "~3.0",
         "symfony/console": "~3.0",
-        "doctrine/dbal": "~2.5",
+        "doctrine/dbal": "^2.10",
         "digilist/dependency-graph": "0.2",
         "fzaninotto/faker": "~1.4",
         "monolog/monolog": "^1.14"
