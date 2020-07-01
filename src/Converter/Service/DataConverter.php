@@ -82,7 +82,7 @@ class DataConverter implements DataConverterInterface
                 return;
             }
 
-            $converter = new ChainConverter([$converter]);
+            $converter = new ChainConverter([$this->converters[$key], $converter]);
         }
 
         $this->converters[$key] = $converter;
