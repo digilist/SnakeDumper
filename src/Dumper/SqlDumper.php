@@ -40,11 +40,16 @@ class SqlDumper implements DumperInterface
         );
 
         $this->dumpPreamble($context);
+
         if (!$context->getConfig()->isIgnoreStructure()) {
             $structureDumper->dumpTableStructure($tables);
         }
+
         $this->dumpTables($context, $tables);
-        $structureDumper->dumpConstraints($tables);
+
+        if (!$context->getConfig()->isIgnoreStructure()) {
+            $structureDumper->dumpConstraints($tables);
+        }
     }
 
     /**
