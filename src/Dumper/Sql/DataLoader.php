@@ -3,9 +3,12 @@
 namespace Digilist\SnakeDumper\Dumper\Sql;
 
 use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DefaultFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\ColumnFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\CompositeFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Exception\UnsupportedFilterException;
+use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Schema\Table;
 use InvalidArgumentException;
@@ -44,6 +47,7 @@ class DataLoader
      * @param array              $harvestedValues
      *
      * @return \Doctrine\DBAL\Driver\Statement
+     * @throws UnsupportedFilterException
      * @throws \Doctrine\DBAL\DBALException
      */
     public function executeSelectQuery(TableConfiguration $tableConfig, Table $table, array $harvestedValues)
@@ -65,6 +69,8 @@ class DataLoader
      * @param array              $harvestedValues
      *
      * @return int
+     * @throws UnsupportedFilterException
+     * @throws \Doctrine\DBAL\DBALException
      */
     public function countRows(TableConfiguration $tableConfig, Table $table, array $harvestedValues)
     {
@@ -91,6 +97,8 @@ class DataLoader
      * @param array              $harvestedValues
      *
      * @return array
+     * @throws UnsupportedFilterException
+     * @throws \Doctrine\DBAL\DBALException
      */
     private function buildSelectQuery(TableConfiguration $tableConfig, Table $table, $harvestedValues)
     {
@@ -119,6 +127,8 @@ class DataLoader
      * @param array              $harvestedValues
      *
      * @return QueryBuilder
+     * @throws UnsupportedFilterException
+     * @throws \Doctrine\DBAL\DBALException
      */
     private function createSelectQueryBuilder(TableConfiguration $tableConfig, Table $table, $harvestedValues = array())
     {
@@ -143,21 +153,38 @@ class DataLoader
      * @param QueryBuilder       $qb
      * @param TableConfiguration $tableConfig
      * @param array              $harvestedValues
+     * @throws UnsupportedFilterException
      */
     private function addFiltersToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $harvestedValues)
     {
         $paramIndex = 0;
         foreach ($tableConfig->getFilters() as $filter) {
+            $expr = $this->addFilterToSelectQuery($qb, $tableConfig, $harvestedValues,  $filter, $paramIndex);
+            $qb->andWhere($expr);
+        }
+    }
+
+    /**
+     * @param QueryBuilder $qb
+     * @param TableConfiguration $tableConfig
+     * @param array $harvestedValues
+     * @param $filter
+     * @param $paramIndex
+     * @return CompositeExpression|mixed
+     * @throws UnsupportedFilterException
+     */
+    private function addFilterToSelectQuery(QueryBuilder $qb, TableConfiguration $tableConfig, array $harvestedValues, $filter, &$paramIndex)
+    {
+        if ($filter instanceof ColumnFilter) {
             if ($filter instanceof DataDependentFilter) {
                 $this->handleDataDependentFilter($filter, $tableConfig, $harvestedValues);
             }
 
-            $param = $this->bindParameters($qb, $filter, $paramIndex);
-            $expr = call_user_func_array(array($qb->expr(), $filter->getOperator()), array(
+            $param = $this->bindParameters($qb, $filter, $paramIndex++);
+            $expr = call_user_func_array([$qb->expr(), $filter->getOperator()], [
                 $this->connectionHandler->getPlatform()->quoteIdentifier($filter->getColumnName()),
                 $param
-            ));
-
+            ]);
             if ($filter instanceof DataDependentFilter) {
                 // also select null values
                 $expr = $qb->expr()->orX(
@@ -167,11 +194,23 @@ class DataLoader
                     )
                 );
             }
-
-            $qb->andWhere($expr);
-
-            $paramIndex++;
+            return $expr;
         }
+
+        if ($filter instanceof CompositeFilter) {
+            $filter->getFilters();
+            return call_user_func_array(
+                [$qb->expr(), $filter->getOperator()],
+                array_map(
+                    function ($childFilter) use ($qb, $tableConfig, $harvestedValues, &$paramIndex) {
+                        return $this->addFilterToSelectQuery($qb, $tableConfig, $harvestedValues, $childFilter, $paramIndex);
+                    },
+                    $filter->getFilters()
+                )
+            );
+
+        }
+        throw new UnsupportedFilterException();
     }
 
     /**
@@ -205,7 +244,8 @@ class DataLoader
         if (!isset($harvestedValues[$referencedTable][$referencedColumn])) {
             throw new InvalidArgumentException(
                 sprintf(
-                    'The column %s of table %s has not been dumped.',
+                    'The %s column of table %s has not been dumped. (dependency of %s)',
+                    $referencedColumn,
                     $referencedTable,
                     $tableName
                 )
@@ -228,9 +268,16 @@ class DataLoader
      */
     private function bindParameters(QueryBuilder $qb, FilterInterface $filter, $paramIndex)
     {
+        if(in_array($filter->getOperator(), [
+            ColumnFilter::OPERATOR_IS_NOT_NULL,
+            ColumnFilter::OPERATOR_IS_NULL,
+        ])) {
+            return;
+        };
+
         $inOperator = in_array($filter->getOperator(), [
-            DefaultFilter::OPERATOR_IN,
-            DefaultFilter::OPERATOR_NOT_IN,
+            ColumnFilter::OPERATOR_IN,
+            ColumnFilter::OPERATOR_NOT_IN,
         ]);
 
         if ($inOperator) {

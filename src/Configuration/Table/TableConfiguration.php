@@ -3,8 +3,8 @@
 namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DefaultFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\CompositeFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\FilterFactory;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
 
 class TableConfiguration extends AbstractConfiguration
@@ -18,9 +18,9 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * Contains the names of all dependent tables
      *
-     * @var string[]
+     * @var TableDependencyConstraint[]
      */
-    private $dependentTables = array();
+    private $dependentTables = [];
 
     /**
      * Contains the names of all columns which values should be collected / harvested for later reuse.
@@ -170,7 +170,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return array
+     * @return bool
      */
     public function hasDependentTables()
     {
@@ -190,7 +190,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param string $dependency
+     * @param TableDependencyConstraint $dependency
      *
      * @return $this
      */
@@ -234,7 +234,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function getFilters()
     {
-        return $this->filters;
+        return array_merge($this->filters, $this->getFiltersFromDependencies());
     }
 
     /**
@@ -262,7 +262,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param array $collectColumn
+     * @param string $collectColumn
      *
      * @return $this
      */
@@ -282,6 +282,10 @@ class TableConfiguration extends AbstractConfiguration
         if (!isset($config['filters'])) {
             $config['filters'] = [];
         }
+        if (!isset($config['dependencies'])) {
+            $config['dependencies'] = [];
+        }
+
 
         // Parse converter definitions and create objects
         foreach ($config['converters'] as $columnName => $converters) {
@@ -291,28 +295,58 @@ class TableConfiguration extends AbstractConfiguration
         }
 
         // Parse filter configurations and create filter objects
-        foreach ($config['filters'] as $filter) {
-            $operator = $filter[0];
-            $columnName = $filter[1];
-            $value = $filter[2];
-
-            if ($operator == 'depends') {
-                $referencedColumn = explode('.', $value);
-                if (count($referencedColumn) !== 2) {
-                    throw new \InvalidArgumentException(
-                        'Unexpected format for depends operator "' . $value . '". Expected format "table.column"'
-                    );
-                }
-
-                $referencedTable = $referencedColumn[0];
-                $referencedColumn = $referencedColumn[1];
-
-                $this->dependentTables[] = $referencedTable;
-
-                $this->filters[] = new DataDependentFilter($columnName, $referencedTable, $referencedColumn);
-            } else {
-                $this->filters[] = new DefaultFilter($columnName, $operator, $value);
+        foreach ($config['filters'] as $filterConfig) {
+            $dependency = TableDependencyConstraint::createFromFilterConfig($filterConfig);
+            if(!is_null($dependency)) {
+                $this->addDependency($dependency);
+                continue;
             }
+
+            $filter = FilterFactory::buildFilter($filterConfig);
+            $this->filters[] = $filter;
+        }
+
+
+        foreach ($config['dependencies'] as $dataDependency) {
+            $this->addDependency(new TableDependencyConstraint(
+                $dataDependency['referenced_table'],
+                $dataDependency['referenced_column'],
+                $dataDependency['column'],
+                $dataDependency['condition']
+            ));
         }
     }
+
+    /**
+     *
+     * @return array
+     */
+    private function getFiltersFromDependencies()
+    {
+        if (count($this->getDependentTables()) == 0) {
+            return [];
+        }
+
+        $dependenciesPerColumn = array_reduce($this->getDependentTables(), function ($acc, TableDependencyConstraint $dependency) {
+            if (!isset($acc[$dependency->getColumn()])) {
+                $acc[$dependency->getColumn()] = [];
+            }
+            $acc[$dependency->getColumn()][] = $dependency;
+            return $acc;
+        }, []);
+
+
+        return array_map(function ($dependencies) {
+            if (count($dependencies) > 1) {
+                $dependencyFilters = array_map(function (TableDependencyConstraint $dependency) {
+                    return $dependency->getFilter();
+                }, $dependencies);
+                return new CompositeFilter(CompositeFilter::OPERATOR_OR, $dependencyFilters);
+            }
+            $dependency = $dependencies[0];
+            return $dependency->getFilter();
+        }, $dependenciesPerColumn);
+    }
+
+
 }

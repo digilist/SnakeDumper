@@ -5,8 +5,8 @@ namespace Digilist\SnakeDumper\Dumper\Sql;
 use Digilist\DependencyGraph\DependencyGraph;
 use Digilist\DependencyGraph\DependencyNode;
 use Digilist\SnakeDumper\Configuration\DumperConfigurationInterface;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\TableDependencyConstraint;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Doctrine\DBAL\Schema\Table;
 
@@ -98,12 +98,11 @@ class TableDependencyResolver
                 // TODO foreign keys pointing to own table not supported yet
                 continue;
             }
-
-            $tableConfig->addFilter(
-                new DataDependentFilter(
-                    $foreignKey->getColumns()[0],
+            $tableConfig->addDependency(
+                new TableDependencyConstraint(
                     $referencedTable,
-                    $foreignKey->getForeignColumns()[0]
+                    $foreignKey->getForeignColumns()[0],
+                    $foreignKey->getColumns()[0]
                 )
             );
         }
