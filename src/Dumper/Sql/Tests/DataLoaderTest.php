@@ -132,8 +132,49 @@ class DataLoaderTest extends AbstractSqlTest
         $this->assertEquals($expectedQuery, $query);
     }
 
+
     /**
-     * Tests whether multiple filters will be AND-ed correclty
+     * Tests whether the isNotNull is built correctly.
+     *
+     * @test
+     */
+    public function testNotNullFilter()
+    {
+        $table = new Table('`Table`'); // Table name must be always quoted
+        $tableConfig = new TableConfiguration('Table',[
+            'filters' => [
+                ['isNotNull', 'column']
+            ]
+        ]);
+
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
+
+        $expectedQuery = 'SELECT * FROM `Table` t WHERE `column` IS NOT NULL';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+    /**
+     * Tests whether the isNull is built correctly.
+     *
+     * @test
+     */
+    public function testNullFilter()
+    {
+        $table = new Table('`Table`'); // Table name must be always quoted
+        $tableConfig = new TableConfiguration('Table',[
+            'filters' => [
+                ['isNull', 'column']
+            ]
+        ]);
+
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
+
+        $expectedQuery = 'SELECT * FROM `Table` t WHERE `column` IS NULL';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+    /**
+     * Tests whether multiple filters will be AND-ed correctly
      *
      * @test
      */
@@ -189,6 +230,102 @@ class DataLoaderTest extends AbstractSqlTest
         $expectedQuery = 'SELECT * FROM `Billing` t WHERE (`customer_id` IN (:param_0_0, :param_0_1, :param_0_2, :param_0_3)) OR (`customer_id` IS NULL)';
         $this->assertEquals($expectedQuery, $query);
     }
+
+
+    /**
+     * Tests whether the Composite filters are built correctly.
+     *
+     * @test
+     */
+    public function testCompositeFilters()
+    {
+        $table = new Table('`Table`');
+        $tableConfig = new TableConfiguration('Table',[
+            'filters' => [
+                ['or', ['eq', 'col1', 1], ['eq', 'col2', 2] ,['eq', 'col3', 3]],
+                ['and', ['gt', 'col1', 0], ['gt', 'col2', 2] ,['gt', 'col3', 3]]
+            ]
+        ]);
+
+        $query = $this->createSelectQueryBuilder($tableConfig, $table)->getSQL();
+
+        $expectedQuery = 'SELECT * FROM `Table` t WHERE ((`col1` = :param_0) OR (`col2` = :param_1) '
+            .'OR (`col3` = :param_2)) AND ((`col1` > :param_3) AND (`col2` > :param_4) AND (`col3` > :param_5))';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+
+    /**
+     * Tests whether a table is white listed works correctly.
+     */
+    public function testRegularDependency()
+    {
+        $table1 = new Table('`Table1`');
+        $table1Config = new TableConfiguration('Table1', [
+            'dependencies' => [
+                [
+                    'column' => 'ref_id',
+                    'referenced_table' => 'Table2',
+                    'referenced_column' => 'id',
+                    'condition' => ['eq', 'ref_table', 'Table2']
+                ]
+            ]
+        ]);
+        $harvestedValues = [
+            'Table2' => [
+                'id' => [1,2,3]
+            ]
+        ];
+
+        $query = $this->createSelectQueryBuilder($table1Config, $table1, $harvestedValues)->getSQL();
+        $expectedQuery = 'SELECT * FROM `Table1` t WHERE '
+            .'((`ref_id` IN (:param_0_0, :param_0_1, :param_0_2)) OR (`ref_id` IS NULL)) AND (`ref_table` = :param_1)';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+    /**
+     * Tests whether a table is white listed works correctly.
+     */
+    public function testDoubleDependencyOnSameColumn()
+    {
+        $table1 = new Table('`Table1`');
+        $table1Config = new TableConfiguration('Table1', [
+            'dependencies' => [
+                [
+                    'column' => 'ref_id',
+                    'referenced_table' => 'Table2',
+                    'referenced_column' => 'id',
+                    'condition' => ['eq', 'ref_table', 'Table2']
+                ],
+                [
+                    'column' => 'ref_id',
+                    'referenced_table' => 'Table3',
+                    'referenced_column' => 'id',
+                    'condition' => ['eq', 'ref_table', 'Table3']
+                ]
+            ]
+        ]);
+        $harvestedValues = [
+            'Table2' => [
+                'id' => [1,2,3]
+            ],
+            'Table3' => [
+                'id' => [1]
+            ]
+        ];
+
+        $query = $this->createSelectQueryBuilder($table1Config, $table1, $harvestedValues)->getSQL();
+        $expectedQuery = 'SELECT * FROM `Table1` t WHERE '
+            .'('
+                .'((`ref_id` IN (:param_0_0, :param_0_1, :param_0_2)) OR (`ref_id` IS NULL)) AND (`ref_table` = :param_1)'
+            .') '
+            .'OR '
+            .'('
+                .'((`ref_id` IN (:param_2_0)) OR (`ref_id` IS NULL)) AND (`ref_table` = :param_3)'
+            .')';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
 
     /**
      * @param TableConfiguration $tableConfig
