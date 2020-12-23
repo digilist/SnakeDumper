@@ -7,6 +7,7 @@ use Digilist\SnakeDumper\Configuration\Table\Filter\ColumnFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\CompositeFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
 use Digilist\SnakeDumper\Exception\UnsupportedFilterException;
 use Doctrine\DBAL\Query\Expression\CompositeExpression;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -17,7 +18,7 @@ use Psr\Log\LoggerInterface;
 /**
  * This class helps to query the appropriate data that should be dumped.
  */
-class DataLoader
+class DataLoader implements DataLoaderInterface
 {
 
     /**
@@ -303,5 +304,33 @@ class DataLoader
         }
 
         return $param;
+    }
+
+    /**
+     * Get distinct values from a table and column
+     *
+     * @param string $table
+     * @param string $property
+     * @return \Traversable
+     * @throws \Doctrine\DBAL\DBALException
+     */
+    public function getDistinctValues($tableName, $property)
+    {
+        $connection = $this->connectionHandler->getConnection();
+        $table = $connection->getSchemaManager()->listTableDetails($tableName);
+        $qb = $connection->createQueryBuilder()
+            ->select($property)->distinct()
+            ->from($table->getQuotedName($this->connectionHandler->getPlatform()), 't');
+
+        $query = $qb->getSQL();
+        $parameters = $qb->getParameters();
+
+        $this->logger->debug('Executing select query' . $query);
+        $results = $this->connectionHandler->getConnection()->prepare($query);
+        $results->execute($parameters);
+        $results = array_map(function ($row) use ($property) {
+            return $row[$property];
+        }, iterator_to_array($results));
+        return $results;
     }
 }

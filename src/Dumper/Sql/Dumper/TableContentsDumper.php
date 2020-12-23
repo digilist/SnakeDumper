@@ -5,7 +5,6 @@ namespace Digilist\SnakeDumper\Dumper\Sql\Dumper;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Converter\Service\DataConverterInterface;
 use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
-use Digilist\SnakeDumper\Dumper\Helper\ProgressBarHelper;
 use Digilist\SnakeDumper\Dumper\Sql\ConnectionHandler;
 use Digilist\SnakeDumper\Dumper\Sql\DataLoader;
 use Doctrine\DBAL\Schema\Table;
@@ -53,15 +52,15 @@ class TableContentsDumper
 
     /**
      * @param SqlDumperContext $context
+     * @param DataLoader $dataLoader
      */
-    public function __construct(SqlDumperContext $context) {
+    public function __construct(SqlDumperContext $context, DataLoader $dataLoader) {
         $this->context = $context;
+        $this->dataLoader = $dataLoader;
         $this->connectionHandler = $context->getConnectionHandler();
         $this->dataConverter = $context->getDataConverter();
         $this->dumpOutput = $context->getDumpOutput();
         $this->logger = $context->getLogger();
-
-        $this->dataLoader = new DataLoader($this->connectionHandler, $context->getLogger());
     }
 
     /**

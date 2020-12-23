@@ -3,51 +3,69 @@
 namespace Digilist\SnakeDumper\Dumper;
 
 use Digilist\SnakeDumper\Dumper\Context\DumperContextInterface;
+use Digilist\SnakeDumper\Dumper\Sql\DataLoader;
 use Digilist\SnakeDumper\Dumper\Sql\SqlDumperContext;
 use Digilist\SnakeDumper\Dumper\Sql\Dumper\TableContentsDumper;
 use Digilist\SnakeDumper\Dumper\Sql\TableSelector;
 use Digilist\SnakeDumper\Dumper\Sql\Dumper\StructureDumper;
 use Doctrine\DBAL\Schema\Table;
+use InvalidArgumentException;
 
 class SqlDumper implements DumperInterface
 {
+
+    /** @var SqlDumperContext $context */
+    protected $context;
+
+    /** @var DataLoader $dataLoader */
+    protected $dataLoader;
+
+    /**
+     * SqlDumper constructor.
+     * @param DumperContextInterface $this->context
+     */
+    public function __construct(DumperContextInterface $context)
+    {
+        if (!$context instanceof SqlDumperContext) {
+            throw new InvalidArgumentException(
+                'The sql dumper requires the context to be instanceof ' . SqlDumperContext::class
+            );
+        }
+        $this->context = $context;
+        $this->dataLoader = new DataLoader($context->getConnectionHandler(), $context->getLogger());
+    }
 
     /**
      * This function starts the dump process.
      *
      * The passed context contains all information that are necessary to create the dump.
      *
-     * @param DumperContextInterface|SqlDumperContext $context
-     *
      * @return void
+     * @throws \Exception
      */
-    public function dump(DumperContextInterface $context)
+    public function dump()
     {
-        if (!$context instanceof SqlDumperContext) {
-            throw new \InvalidArgumentException(
-                'The sql dumper requires the context to be instanceof ' . SqlDumperContext::class
-            );
-        }
+        $this->context->getConfig()->hydrateConfig($this->dataLoader);
 
         // Retrieve list of tables
-        $tableFinder = new TableSelector($context->getConnectionHandler()->getConnection());
-        $tables = $tableFinder->findTablesToDump($context->getConfig());
+        $tableFinder = new TableSelector($this->context->getConnectionHandler()->getConnection());
+        $tables = $tableFinder->findTablesToDump($this->context->getConfig());
 
         $structureDumper = new StructureDumper(
-            $context->getConnectionHandler()->getPlatform(),
-            $context->getDumpOutput(),
-            $context->getLogger()
+            $this->context->getConnectionHandler()->getPlatform(),
+            $this->context->getDumpOutput(),
+            $this->context->getLogger()
         );
 
-        $this->dumpPreamble($context);
+        $this->dumpPreamble();
 
-        if (!$context->getConfig()->isIgnoreStructure()) {
+        if (!$this->context->getConfig()->isIgnoreStructure()) {
             $structureDumper->dumpTableStructure($tables);
         }
 
-        $this->dumpTables($context, $tables);
+        $this->dumpTables($tables);
 
-        if (!$context->getConfig()->isIgnoreStructure()) {
+        if (!$this->context->getConfig()->isIgnoreStructure()) {
             $structureDumper->dumpConstraints($tables);
         }
     }
@@ -55,18 +73,17 @@ class SqlDumper implements DumperInterface
     /**
      * Put some comments and initial commands at the beginning of the dump.
      *
-     * @param SqlDumperContext $context
      */
-    private function dumpPreamble(SqlDumperContext $context) {
-        $dumpOutput = $context->getDumpOutput();
+    private function dumpPreamble() {
+        $dumpOutput = $this->context->getDumpOutput();
 
-        $commentStart = $context->getConnectionHandler()->getPlatform()->getSqlCommentStartString();
+        $commentStart = $this->context->getConnectionHandler()->getPlatform()->getSqlCommentStartString();
         $dumpOutput->writeln($commentStart . ' ------------------------');
         $dumpOutput->writeln($commentStart . ' SnakeDumper SQL Dump');
         $dumpOutput->writeln($commentStart . ' ------------------------');
         $dumpOutput->writeln('');
 
-        $extras = $context->getConnectionHandler()->getPlatformAdjustment()->getPreembleExtras();
+        $extras = $this->context->getConnectionHandler()->getPlatformAdjustment()->getPreembleExtras();
         foreach ($extras as $extra) {
             $dumpOutput->writeln($extra);
         }
@@ -75,20 +92,19 @@ class SqlDumper implements DumperInterface
     }
 
     /**
-     * @param SqlDumperContext $context
      * @param Table[]          $tables
      */
-    private function dumpTables(SqlDumperContext $context, array $tables)
+    private function dumpTables(array $tables)
     {
-        $progress = $context->getProgressBarHelper()->createProgressBar(count($tables));
+        $progress = $this->context->getProgressBarHelper()->createProgressBar(count($tables));
 
-        $contentsDumper = new TableContentsDumper($context);
+        $contentsDumper = new TableContentsDumper($this->context, $this->dataLoader);
         foreach ($tables as $table) {
-            $contentsDumper->dumpTable($table, $context->getConfig()->getTableConfig($table->getName()));
+            $contentsDumper->dumpTable($table, $this->context->getConfig()->getTableConfig($table->getName()));
             $progress->advance();
         }
 
         $progress->finish();
-        $context->getLogger()->info('Dump finished');
+        $this->context->getLogger()->info('Dump finished');
     }
 }

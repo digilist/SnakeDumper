@@ -6,6 +6,9 @@ use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\Filter\CompositeFilter;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterFactory;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
+use Digilist\SnakeDumper\Exception\ConfigurationException;
+use Digilist\SnakeDumper\Exception\InvalidArgumentException;
 
 class TableConfiguration extends AbstractConfiguration
 {
@@ -44,8 +47,16 @@ class TableConfiguration extends AbstractConfiguration
     private $filters = array();
 
     /**
+     * Dependencies to hydrate with data from the DB.
+     *
+     * @var array
+     */
+    private $dependenciesToHydrate = [];
+
+    /**
      * @param string $name
      * @param array $config
+     * @param DataLoaderInterface $dataLoader
      */
     public function __construct($name, array $config = array())
     {
@@ -308,21 +319,63 @@ class TableConfiguration extends AbstractConfiguration
 
 
         foreach ($config['dependencies'] as $dataDependency) {
-            $this->addDependency(new TableDependencyConstraint(
-                $dataDependency['referenced_table'],
-                $dataDependency['referenced_column'],
-                $dataDependency['column'],
-                $dataDependency['condition']
-            ));
+            if (!isset($dataDependency['column'])) {
+                throw new InvalidArgumentException(sprintf('\'column\' is required for dependencies of %s.', $this->getName()));
+            }
+            if (!isset($dataDependency['referenced_table']) && !isset($dataDependency['column_as_referenced_table']) ) {
+                throw new InvalidArgumentException(sprintf('\'referenced_table\' or \'column_as_referenced_table\' is required for dependencies of %s.', $this->getName()));
+            }
+            if (isset($dataDependency['referenced_table']) && isset($dataDependency['column_as_referenced_table']) ) {
+                throw new InvalidArgumentException(sprintf('\'referenced_table\' and \'column_as_referenced_table\' cannot be used together (table %s).', $this->getName()));
+            }
+            $referencedColumn = isset($dataDependency['referenced_column']) ? $dataDependency['referenced_column'] : 'id';
+
+            if (isset($dataDependency['referenced_table'])) {
+                $this->addDependency(new TableDependencyConstraint(
+                    $dataDependency['referenced_table'],
+                    $referencedColumn,
+                    $dataDependency['column'],
+                    $dataDependency['condition']
+                ));
+            } else {
+                $this->dependenciesToHydrate[] = new MultiTableDependencyConstraint(
+                    $dataDependency['column_as_referenced_table'],
+                    $referencedColumn,
+                    $dataDependency['column']
+                );
+            }
+
+
         }
     }
 
+    public function hydrateConfig(DataLoaderInterface $dataLoader) {
+        /** @var MultiTableDependencyConstraint $dependency */
+        foreach ($this->dependenciesToHydrate as $dependency) {
+            $tables = $dataLoader->getDistinctValues($this->getName(), $dependency->getColumnReferencedTable());
+            foreach ($tables as $table) {
+                $this->addDependency(new TableDependencyConstraint(
+                    $table,
+                    $dependency->getReferencedColumn(),
+                    $dependency->getColumn(),
+                    ['eq', $dependency->getColumnReferencedTable(), $table]
+                ));
+            }
+        }
+        $this->dependenciesToHydrate = [];
+    }
+
     /**
-     *
      * @return array
+     * @throws ConfigurationException
      */
     private function getFiltersFromDependencies()
     {
+        if (!empty($this->dependenciesToHydrate)) {
+            // Should never happen, but used here as gate keeper.
+            throw new ConfigurationException('Configuration has not been hydrated');
+        }
+
         if (count($this->getDependentTables()) == 0) {
             return [];
         }

@@ -2,6 +2,8 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
+
 interface DumperConfigurationInterface
 {
 
@@ -14,4 +16,10 @@ interface DumperConfigurationInterface
      * @return OutputConfiguration
      */
     public function getOutputConfig();
+
+    /**
+     * @param DataLoaderInterface $dataLoader
+     * @return mixed
+     */
+    public function hydrateConfig(DataLoaderInterface $dataLoader);
 }

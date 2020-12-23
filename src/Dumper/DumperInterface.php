@@ -15,13 +15,20 @@ interface DumperInterface
 {
 
     /**
+     * DumperInterface constructor.
+     * @param DumperContextInterface $context
+     */
+    public function __construct(DumperContextInterface $context);
+
+    /**
      * This function starts the dump process.
      *
-     * The passed context contains all information that are necessary to create the dump.
+     * The passed context contains all information
      *
      * @param DumperContextInterface $context
      *
      * @return void
      */
-    public function dump(DumperContextInterface $context);
+    public function dump();
+
 }

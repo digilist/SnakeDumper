@@ -77,6 +77,7 @@ class SnakeConfigurationTree implements ConfigurationInterface
                             ->arrayPrototype()
                                 ->children()
                                     ->scalarNode('column')->end()
+                                    ->scalarNode('column_as_referenced_table')->end()
                                     ->scalarNode('referenced_table')->end()
                                     ->scalarNode('referenced_column')->end()
                                     ->arrayNode('condition')

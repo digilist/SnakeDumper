@@ -52,8 +52,8 @@ class DumpCommand extends Command
 
         /** @var DumperInterface $dumper */
         $class = $config->getFullQualifiedDumperClassName();
-        $dumper = new $class();
-        $dumper->dump($context);
+        $dumper = new $class($context);
+        $dumper->dump();
     }
 
     /**

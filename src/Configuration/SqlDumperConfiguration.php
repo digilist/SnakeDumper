@@ -4,6 +4,7 @@ namespace Digilist\SnakeDumper\Configuration;
 
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
 use Digilist\SnakeDumper\Configuration\Table\TableDependencyConstraint;
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
 
 class SqlDumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
 {
@@ -160,7 +161,12 @@ class SqlDumperConfiguration extends AbstractConfiguration implements DumperConf
         foreach ($dumperConfig['tables'] as $name => $tableConfig) {
             $this->tableConfigs[$name] = new TableConfiguration($name, $tableConfig);
         }
+    }
 
+    public function hydrateConfig(DataLoaderInterface $dataLoader) {
+        foreach ($this->tableConfigs as $tableConfiguration) {
+            $tableConfiguration->hydrateConfig($dataLoader);
+        }
         $this->parseDependencies();
     }
 

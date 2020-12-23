@@ -55,12 +55,12 @@ abstract class AbstractSqlTest extends TestCase
     }
 
     /**
-     * Create a simple schema the tests can run against.
-     *
-     * if $randomTables is true, some other tables will be created.
-     *
-     * @param bool $randomTables
-     */
+ * Create a simple schema the tests can run against.
+ *
+ * if $randomTables is true, some other tables will be created.
+ *
+ * @param bool $randomTables
+ */
     protected function createTestSchema($randomTables = false)
     {
         $pdo = $this->connection->getWrappedConnection();
@@ -83,7 +83,7 @@ abstract class AbstractSqlTest extends TestCase
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(10)
             )');
-                $pdo->query('CREATE TABLE RandomTable2 (
+            $pdo->query('CREATE TABLE RandomTable2 (
                 id INTEGER PRIMARY KEY AUTO_INCREMENT,
                 name VARCHAR(10)
             )');
@@ -106,5 +106,62 @@ abstract class AbstractSqlTest extends TestCase
             $pdo->query('INSERT INTO RandomTable VALUES (2, "Bar")');
             $pdo->query('INSERT INTO RandomTable2 VALUES (1, "FooBar")');
         }
+    }
+
+
+
+    /**
+     * Create a simple schema the tests can run against.
+     *
+     *
+     */
+    protected function createTestDependenciesSchema()
+    {
+        $pdo = $this->connection->getWrappedConnection();
+
+        $pdo->query('CREATE TABLE Customer (
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(10)
+        )');
+
+        $pdo->query('CREATE TABLE Badge (
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(10)
+        )');
+
+        $pdo->query('CREATE TABLE SKU (
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(10)
+        )');
+
+        $pdo->query('CREATE TABLE BadgeMembership (
+            id INTEGER PRIMARY KEY AUTO_INCREMENT,
+            badge_id INTEGER,
+            item_id INTEGER,
+            item_table VARCHAR(10),
+            CONSTRAINT BadgeMembership_badge_id FOREIGN KEY (badge_id) REFERENCES Badge(id) ON UPDATE CASCADE ON DELETE SET NULL
+        )');
+
+        // insert data
+        $pdo->query('INSERT INTO Customer VALUES (1, "Markus")');
+        $pdo->query('INSERT INTO Customer VALUES (2, "Konstantin")');
+        $pdo->query('INSERT INTO Customer VALUES (3, "John")');
+        $pdo->query('INSERT INTO Customer VALUES (4, "Konrad")');
+        $pdo->query('INSERT INTO Customer VALUES (5, "Mark")');
+        $pdo->query('INSERT INTO SKU VALUES (1, "Cloud")');
+        $pdo->query('INSERT INTO SKU VALUES (2, "Sun")');
+        $pdo->query('INSERT INTO SKU VALUES (3, "Rain")');
+        $pdo->query('INSERT INTO Badge VALUES (1, "Regular")');
+        $pdo->query('INSERT INTO Badge VALUES (2, "Admiral")');
+        $pdo->query('INSERT INTO Badge VALUES (3, "VIP")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (1, 1, 1, "Customer")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (2, 1, 2, "Customer")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (3, 2, 3, "Customer")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (4, 3, 4, "Customer")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (5, 3, 5, "Customer")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (6, 1, 1, "SKU")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (7, 3, 2, "SKU")');
+        $pdo->query('INSERT INTO BadgeMembership VALUES (8, 2, 3, "SKU")');
+
     }
 }

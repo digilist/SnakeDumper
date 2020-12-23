@@ -51,9 +51,34 @@ tables:
                             if_false_converters:
                                 - 'employee'
 
-        filters:
+        filters: # filters are applied with AND operator
             - [in, 'id', [1, 2, 3]] # only select rows which id is 1, 2 or 3
             - [like, 'name', 'Markus %'] # only select rows which column "name" starts with Markus
+            - [isNotNull, 'street']
+            - [or, [gte, id, 1], [lte, id, 3] ] # ( id >= 1 ) OR  ( id <= 3)
+
+        dependencies: # Used to declare dependencies not constrained by a foreign keys.
+            - column: "reference_id"
+              referenced_table: "referenceTable"
+              referenced_column: "id"
+
+    bar:
+        dependencies: # This will apply the dependency based on the logical condition
+            - column: "reference_id"
+              referenced_table: "referenceTableA"
+              referenced_column: "id"
+              condition: [eq, 'reference_table',  'referenceTableA']
+            - column: "reference_id"
+              referenced_table: "referenceTableB"
+              referenced_column: "id"
+              condition: [eq, 'reference_table',  'referenceTableB']
+
+    beer:
+        dependencies: # This will apply all the dependencies dynamically for tables using a column to refer to the dependency
+            - column: "reference_id"
+              column_as_referenced_table: "reference_table"
+              referenced_column: "id"
+
     foo_custom:
         query: >
             SELECT *, bar.value1 AS xyz
