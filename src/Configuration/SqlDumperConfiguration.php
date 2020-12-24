@@ -2,8 +2,9 @@
 
 namespace Digilist\SnakeDumper\Configuration;
 
-use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
 use Digilist\SnakeDumper\Configuration\Table\TableConfiguration;
+use Digilist\SnakeDumper\Configuration\Table\TableDependencyConstraint;
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
 
 class SqlDumperConfiguration extends AbstractConfiguration implements DumperConfigurationInterface
 {
@@ -133,18 +134,13 @@ class SqlDumperConfiguration extends AbstractConfiguration implements DumperConf
         // a table depends on another table if a dependent filter is defined
         foreach ($this->tableConfigs as $table) {
             // if the dependent table is not configured, create a configuration
+            /** @var TableDependencyConstraint $dependency */
             foreach ($table->getDependentTables() as $dependency) {
-                if (!array_key_exists($dependency, $this->tableConfigs)) {
-                    $this->tableConfigs[$dependency] = new TableConfiguration($dependency, array());
+                $dependentTable = $dependency->getReferencedTable();
+                if (!array_key_exists($dependentTable, $this->tableConfigs)) {
+                    $this->tableConfigs[$dependentTable] = new TableConfiguration($dependentTable, array());
                 }
-            }
-
-            // find dependent filters and add harvest columns
-            foreach ($table->getFilters() as $filter) {
-                if ($filter instanceof DataDependentFilter) {
-                    // the dependent table needs to collect values of that column
-                    $this->tableConfigs[$filter->getReferencedTable()]->addHarvestColumn($filter->getReferencedColumn());
-                }
+                $this->tableConfigs[$dependentTable]->addHarvestColumn($dependency->getReferencedColumn());
             }
         }
     }
@@ -165,7 +161,12 @@ class SqlDumperConfiguration extends AbstractConfiguration implements DumperConf
         foreach ($dumperConfig['tables'] as $name => $tableConfig) {
             $this->tableConfigs[$name] = new TableConfiguration($name, $tableConfig);
         }
+    }
 
+    public function hydrateConfig(DataLoaderInterface $dataLoader) {
+        foreach ($this->tableConfigs as $tableConfiguration) {
+            $tableConfiguration->hydrateConfig($dataLoader);
+        }
         $this->parseDependencies();
     }
 

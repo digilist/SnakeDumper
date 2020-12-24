@@ -73,10 +73,22 @@ class SnakeConfigurationTree implements ConfigurationInterface
                         ->arrayNode('filters')
                             ->prototype('variable')->end()
                         ->end()
+                        ->arrayNode('dependencies')
+                            ->arrayPrototype()
+                                ->children()
+                                    ->scalarNode('column')->end()
+                                    ->scalarNode('column_as_referenced_table')->end()
+                                    ->scalarNode('referenced_table')->end()
+                                    ->scalarNode('referenced_column')->end()
+                                    ->arrayNode('condition')
+                                        ->prototype('variable')->end()
+                                    ->end()
+                                ->end()
+                            ->end()
+                        ->end()
                     ->end()
                 ->end()
-            ->end()
-        ;
+            ->end();
 
         return $treeBuilder;
     }

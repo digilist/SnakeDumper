@@ -2,10 +2,9 @@
 
 namespace Digilist\SnakeDumper\Configuration\Table\Filter;
 
-use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
 use InvalidArgumentException;
 
-class DefaultFilter implements FilterInterface
+class ColumnFilter implements FilterColumnInterface
 {
 
     const OPERATOR_EQ = 'eq';
@@ -65,7 +64,7 @@ class DefaultFilter implements FilterInterface
     private $value;
 
     /**
-     * DefaultFilter constructor.
+     * ColumnFilter constructor.
      *
      * @param string $columnName
      * @param string $operator
@@ -73,13 +72,18 @@ class DefaultFilter implements FilterInterface
      */
     public function __construct($columnName, $operator, $value = null)
     {
-        if (!in_array($operator, self::$validOperators)) {
+        if (!self::isValidOperator($operator)) {
             throw new InvalidArgumentException('Invalid filter operator: ' . $operator);
         }
 
         $this->columnName = $columnName;
         $this->operator = $operator;
         $this->value = $value;
+    }
+
+    public static function isValidOperator($operator)
+    {
+        return in_array($operator, self::$validOperators);
     }
 
     /**
@@ -134,5 +138,13 @@ class DefaultFilter implements FilterInterface
     public function setValue($value)
     {
         return $this->value = $value;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFilters()
+    {
+        return [$this->columnName, $this->value];
     }
 }

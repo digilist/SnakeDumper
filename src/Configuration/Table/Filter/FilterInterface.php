@@ -7,15 +7,6 @@ interface FilterInterface
     /**
      * @return string
      */
-    public function getColumnName();
-
-    /**
-     * @return string
-     */
     public function getOperator();
 
-    /**
-     * @return string
-     */
-    public function getValue();
 }

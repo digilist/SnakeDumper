@@ -3,9 +3,12 @@
 namespace Digilist\SnakeDumper\Configuration\Table;
 
 use Digilist\SnakeDumper\Configuration\AbstractConfiguration;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DataDependentFilter;
-use Digilist\SnakeDumper\Configuration\Table\Filter\DefaultFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\CompositeFilter;
+use Digilist\SnakeDumper\Configuration\Table\Filter\FilterFactory;
 use Digilist\SnakeDumper\Configuration\Table\Filter\FilterInterface;
+use Digilist\SnakeDumper\Dumper\DataLoaderInterface;
+use Digilist\SnakeDumper\Exception\ConfigurationException;
+use Digilist\SnakeDumper\Exception\InvalidArgumentException;
 
 class TableConfiguration extends AbstractConfiguration
 {
@@ -18,9 +21,9 @@ class TableConfiguration extends AbstractConfiguration
     /**
      * Contains the names of all dependent tables
      *
-     * @var string[]
+     * @var TableDependencyConstraint[]
      */
-    private $dependentTables = array();
+    private $dependentTables = [];
 
     /**
      * Contains the names of all columns which values should be collected / harvested for later reuse.
@@ -44,8 +47,16 @@ class TableConfiguration extends AbstractConfiguration
     private $filters = array();
 
     /**
+     * Dependencies to hydrate with data from the DB.
+     *
+     * @var array
+     */
+    private $dependenciesToHydrate = [];
+
+    /**
      * @param string $name
      * @param array $config
+     * @param DataLoaderInterface $dataLoader
      */
     public function __construct($name, array $config = array())
     {
@@ -170,7 +181,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @return array
+     * @return bool
      */
     public function hasDependentTables()
     {
@@ -190,7 +201,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param string $dependency
+     * @param TableDependencyConstraint $dependency
      *
      * @return $this
      */
@@ -234,7 +245,7 @@ class TableConfiguration extends AbstractConfiguration
      */
     public function getFilters()
     {
-        return $this->filters;
+        return array_merge($this->filters, $this->getFiltersFromDependencies());
     }
 
     /**
@@ -262,7 +273,7 @@ class TableConfiguration extends AbstractConfiguration
     }
 
     /**
-     * @param array $collectColumn
+     * @param string $collectColumn
      *
      * @return $this
      */
@@ -282,6 +293,10 @@ class TableConfiguration extends AbstractConfiguration
         if (!isset($config['filters'])) {
             $config['filters'] = [];
         }
+        if (!isset($config['dependencies'])) {
+            $config['dependencies'] = [];
+        }
+
 
         // Parse converter definitions and create objects
         foreach ($config['converters'] as $columnName => $converters) {
@@ -291,28 +306,100 @@ class TableConfiguration extends AbstractConfiguration
         }
 
         // Parse filter configurations and create filter objects
-        foreach ($config['filters'] as $filter) {
-            $operator = $filter[0];
-            $columnName = $filter[1];
-            $value = $filter[2];
-
-            if ($operator == 'depends') {
-                $referencedColumn = explode('.', $value);
-                if (count($referencedColumn) !== 2) {
-                    throw new \InvalidArgumentException(
-                        'Unexpected format for depends operator "' . $value . '". Expected format "table.column"'
-                    );
-                }
-
-                $referencedTable = $referencedColumn[0];
-                $referencedColumn = $referencedColumn[1];
-
-                $this->dependentTables[] = $referencedTable;
-
-                $this->filters[] = new DataDependentFilter($columnName, $referencedTable, $referencedColumn);
-            } else {
-                $this->filters[] = new DefaultFilter($columnName, $operator, $value);
+        foreach ($config['filters'] as $filterConfig) {
+            $dependency = TableDependencyConstraint::createFromFilterConfig($filterConfig);
+            if(!is_null($dependency)) {
+                $this->addDependency($dependency);
+                continue;
             }
+
+            $filter = FilterFactory::buildFilter($filterConfig);
+            $this->filters[] = $filter;
+        }
+
+
+        foreach ($config['dependencies'] as $dataDependency) {
+            if (!isset($dataDependency['column'])) {
+                throw new InvalidArgumentException(sprintf('\'column\' is required for dependencies of %s.', $this->getName()));
+            }
+            if (!isset($dataDependency['referenced_table']) && !isset($dataDependency['column_as_referenced_table']) ) {
+                throw new InvalidArgumentException(sprintf('\'referenced_table\' or \'column_as_referenced_table\' is required for dependencies of %s.', $this->getName()));
+            }
+            if (isset($dataDependency['referenced_table']) && isset($dataDependency['column_as_referenced_table']) ) {
+                throw new InvalidArgumentException(sprintf('\'referenced_table\' and \'column_as_referenced_table\' cannot be used together (table %s).', $this->getName()));
+            }
+            $referencedColumn = isset($dataDependency['referenced_column']) ? $dataDependency['referenced_column'] : 'id';
+
+            if (isset($dataDependency['referenced_table'])) {
+                $this->addDependency(new TableDependencyConstraint(
+                    $dataDependency['referenced_table'],
+                    $referencedColumn,
+                    $dataDependency['column'],
+                    $dataDependency['condition']
+                ));
+            } else {
+                $this->dependenciesToHydrate[] = new MultiTableDependencyConstraint(
+                    $dataDependency['column_as_referenced_table'],
+                    $referencedColumn,
+                    $dataDependency['column']
+                );
+            }
+
+
         }
     }
+
+    public function hydrateConfig(DataLoaderInterface $dataLoader) {
+        /** @var MultiTableDependencyConstraint $dependency */
+        foreach ($this->dependenciesToHydrate as $dependency) {
+            $tables = $dataLoader->getDistinctValues($this->getName(), $dependency->getColumnReferencedTable());
+            foreach ($tables as $table) {
+                $this->addDependency(new TableDependencyConstraint(
+                    $table,
+                    $dependency->getReferencedColumn(),
+                    $dependency->getColumn(),
+                    ['eq', $dependency->getColumnReferencedTable(), $table]
+                ));
+            }
+        }
+        $this->dependenciesToHydrate = [];
+    }
+
+    /**
+     * @return array
+     * @throws ConfigurationException
+     */
+    private function getFiltersFromDependencies()
+    {
+        if (!empty($this->dependenciesToHydrate)) {
+            // Should never happen, but used here as gate keeper.
+            throw new ConfigurationException('Configuration has not been hydrated');
+        }
+
+        if (count($this->getDependentTables()) == 0) {
+            return [];
+        }
+
+        $dependenciesPerColumn = array_reduce($this->getDependentTables(), function ($acc, TableDependencyConstraint $dependency) {
+            if (!isset($acc[$dependency->getColumn()])) {
+                $acc[$dependency->getColumn()] = [];
+            }
+            $acc[$dependency->getColumn()][] = $dependency;
+            return $acc;
+        }, []);
+
+
+        return array_map(function ($dependencies) {
+            if (count($dependencies) > 1) {
+                $dependencyFilters = array_map(function (TableDependencyConstraint $dependency) {
+                    return $dependency->getFilter();
+                }, $dependencies);
+                return new CompositeFilter(CompositeFilter::OPERATOR_OR, $dependencyFilters);
+            }
+            $dependency = $dependencies[0];
+            return $dependency->getFilter();
+        }, $dependenciesPerColumn);
+    }
+
+
 }
